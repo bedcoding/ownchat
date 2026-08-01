@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "사용자 PC에서 도는 로컬 브리지 — 본인이 로그인한 Claude Code를 채팅 UI에 연결한다",
   "type": "module",
-  "license": "MIT",
   "bin": {
     "ownchat-bridge": "bin/ownchat-bridge.mjs"
   },
