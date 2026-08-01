@@ -1,0 +1,22 @@
+{
+  "name": "@ownchat/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ownchat 데스크톱 앱 — 내 Claude 구독 요금으로 쓰는 채팅 (종량제 과금 없음)",
+  "author": "ownchat",
+  "type": "module",
+  "main": "build/main.mjs",
+  "scripts": {
+    "dev": "cross-env OWNCHAT_DEV_URL=http://localhost:3000 npm run start",
+    "start": "npm run build:main && electron .",
+    "build:main": "node scripts/build-main.mjs",
+    "pack": "npm run build -w @ownchat/web && npm run build:main && electron-builder --dir",
+    "dist": "npm run build -w @ownchat/web && npm run build:main && electron-builder"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "33.4.11",
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.25.0"
+  }
+}

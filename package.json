@@ -1,0 +1,27 @@
+{
+  "name": "ownchat",
+  "private": true,
+  "version": "0.1.0",
+  "description": "추론 비용이 서비스가 아니라 사용자 쪽에서 발생하는 AI 채팅 — 데스크톱 앱(구독 요금) + 호스팅 웹(BYOK)",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "desktop": "npm run build -w @ownchat/web && npm run start -w @ownchat/desktop",
+    "desktop:dev": "concurrently -n web,app -c cyan,magenta \"npm run dev -w @ownchat/web\" \"npm run dev -w @ownchat/desktop\"",
+    "desktop:pack": "npm run pack -w @ownchat/desktop",
+    "desktop:dist": "npm run dist -w @ownchat/desktop",
+    "dev": "concurrently -n web,bridge -c cyan,yellow \"npm run dev -w @ownchat/web\" \"npm run start -w @ownchat/bridge\"",
+    "dev:web": "npm run dev -w @ownchat/web",
+    "build": "npm run build -w @ownchat/web",
+    "bridge": "npm run start -w @ownchat/bridge",
+    "bridge:token": "npm run start -w @ownchat/bridge -- --print-token"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

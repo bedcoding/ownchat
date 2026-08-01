@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ownchat-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "@ownchat/web", "--", "--port", "3100"],
+      "port": 3100
+    }
+  ]
+}

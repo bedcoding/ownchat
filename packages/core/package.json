@@ -1,0 +1,17 @@
+{
+  "name": "@ownchat/core",
+  "version": "0.1.0",
+  "description": "사용자 PC의 Claude Code를 구동하는 공통 로직 — HTTP도 UI도 모르는 순수 계층",
+  "type": "module",
+  "main": "src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./*": "./src/*.mjs"
+  },
+  "files": [
+    "src"
+  ],
+  "engines": {
+    "node": ">=20.12"
+  }
+}

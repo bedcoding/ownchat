@@ -1,0 +1,46 @@
+appId: com.ownchat.desktop
+productName: ownchat
+copyright: ownchat
+
+directories:
+  output: dist
+  buildResources: build
+
+# 메인 프로세스는 build/main.mjs 로 번들되어 있고 프로덕션 의존성이 없다.
+# 렌더러는 apps/web 의 정적 export 결과물을 app.asar 안 renderer/ 로 복사한다.
+files:
+  - package.json
+  - build/**/*
+  - from: ../web/out
+    to: renderer
+    filter:
+      - '**/*'
+
+# 번들된 결과물만 넣으므로 네이티브 모듈 재빌드가 필요 없다.
+npmRebuild: false
+
+# 서명·공증은 배포자가 각자 설정해야 한다. 없이 빌드하면 실행 시 OS 경고가 뜬다.
+win:
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  # Claude Code CLI를 자식 프로세스로 띄우려면 이 두 가지가 필요하다.
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
+linux:
+  category: Utility
+  target:
+    - AppImage
+    - deb

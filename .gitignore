@@ -1,0 +1,16 @@
+node_modules/
+
+# Next.js
+.next/
+.next-prod/
+out/
+
+# Electron
+apps/desktop/build/
+apps/desktop/dist/
+
+dist/
+*.tsbuildinfo
+.env
+.env.local
+.DS_Store
