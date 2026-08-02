@@ -8,7 +8,7 @@
 
 - **심사자가 개발자다.** `while` 괴물의 심장에서 `break;` 를 뽑는 장면은 설명이 필요 없다
 - **선택지 설계가 자명하다.** 코딩은 정답과 오답이 분명해서 스탯 게이트와 정확히 맞물린다
-- **분량 자체가 논증이다.** 9화 62노드를 보여주며 "AI 초안 + 사람 검수"라고 하면 저작 도구의 존재 이유가 자명해진다
+- **분량 자체가 논증이다.** 9화 73노드를 보여주며 "AI 초안 + 사람 검수"라고 하면 저작 도구의 존재 이유가 자명해진다
 - **저작권이 깨끗하다.** 전부 자작이라 공개 저장소에 그대로 둔다
 
 ## 서사에서 지키는 선
@@ -52,7 +52,7 @@ cp apps/rpg/.env.local.example apps/rpg/.env.local
 설계 원칙:
 
 1. **체력은 회복 수단이 있다** (1화 커피, 7화 모닥불). 실수 한 번이 바로 사망이 되지 않게
-2. **최적 경로는 잠겨 있다.** 9화 `break;` 뽑기는 실력 3을 요구한다. 1~3화에서 기술 경로를 골라야 열린다 → 재플레이 동기
+2. **최적 경로는 잠겨 있다.** 2화 뽑기는 실력 2, 8화 권한 우회와 9화 되꽂기는 실력 3을 요구한다. 기술 경로를 계속 골라야 열린다 → 재플레이 동기
 3. **판정은 전부 데이터로.** 엔진에 특수 규칙을 넣지 않았다. `requires`/`effects` 만으로 HP 룰과 권한 상실이 표현되는지 검증하는 목적도 겸한다
 
 ### 2막의 설계 포인트: 평판이 무력해진다
@@ -70,17 +70,39 @@ cp apps/rpg/.env.local.example apps/rpg/.env.local
 | 채용봇 | 허공에 공고를 여는 인사팀 자동화 로봇. 문구는 늘 이상하다 | 1화 |
 | 김선임 | 요구사항을 온몸으로 받아내는 사람. 방패가 오래 버티지는 못한다 | 1화 |
 | 클라이언트 | "간단한 거니까 오늘까지." 라고 말하는 존재 | 1화 |
-| 연재기 | 어느 날 들어와 스스로 배포를 시작한 것. 아무도 부른 적이 없다 | 4화 |
+| 무한루프 | 2화 서버실에서 일어섰던 것. 탈출 조건을 잃고 스스로를 불려왔다 | 2화 |
+| 연재기 | 어느 날부터 스스로 배포하고 스스로 연재하는 것. 아무도 부른 적이 없다 | 4화 |
 | 윤편집 | 가장 먼저 밀려난 사람. 강가에서 사람을 건져 올린다 | 7화 |
 
-## 3막 구조 (9화 62노드)
+## 3막 구조 (9화 73노드)
+
+### 핵심 구조: break 를 두 번 쓴다
+
+같은 물건을 **반대 방향으로** 두 번 쓴다. 이 작품의 척추다.
+
+| | 2화 | 9화 |
+|---|---|---|
+| 행동 | 뽑는다 | 꽂는다 |
+| 결과 | 당장 이긴다 | 끝낸다 |
+| 의미 | 도구 | 조건 |
+
+2화에서 뽑으면 괴물은 자멸한다. 완벽한 승리로 보인다. 하지만 그것은 죽은 게 아니라
+**멈추지 않게 된 것**이고, 그 멈추지 않는 반복이 자라나 2막의 연재기가 된다.
+**악당의 기원이 주인공의 승리다.**
+
+9화에서 주인공은 같은 자리에 조각을 도로 꽂는다. 아무것도 폭발하지 않고 반복이 조건을
+만나 빠져나간다. 2화에서 직접 뽑았다면(`내가뽑았다` 플래그) 9화에 고백 선택지가 열린다.
+
+부수 효과로 **트레일러 구성이 풀린다.** 스펙터클 장면(포탈·몸빵·주석처리·무한루프 자멸)이
+전부 1~2화에 모이므로 1막만으로 트레일러를 자를 수 있고, 마지막 컷은 스포일러 없이
+"조각을 꽂는 손" 하나면 된다.
 
 ### 1막. 벌레의 계절 (1~3화)
 
 | 화 | 제목 | 노드 | 핵심 |
 |---|---|---|---|
 | 1 | 결원 | 11 | 채용 포탈. 요구사항을 몸으로 막는 김선임. `사원증` 획득 |
-| 2 | 주석의 방패 | 9 | 버그떼. `//` 두 획. 오래된 반복문 발견 |
+| 2 | 주석의 방패 | 14 | 버그떼. `//` 두 획. **while 괴물에게서 `break;` 를 뽑는다** |
 | 3 | 아무도 명령하지 않았다 | 7 | 작성자 없는 커밋. 롤백해도 다시 올라온다 |
 
 1화의 `김선임과함께` 플래그가 2·3화의 최선 경로를 연다. 화를 넘어 이어지는 결과가 있다는 걸 데모 초반에 보여주는 장치.
@@ -100,24 +122,24 @@ cp apps/rpg/.env.local.example apps/rpg/.env.local
 | 화 | 제목 | 노드 | 핵심 |
 |---|---|---|---|
 | 7 | 건져 올려지다 | 6 | 윤편집과 생존자들. 2막의 소지품이 `신뢰` 로 바뀐다 |
-| 8 | 판박이 | 5 | 3,200편 전부 완결, 전부 같은 이야기 |
-| 9 | 다음 화 | 7 | 2화에서 배를 갈랐던 그 반복문이 방을 가득 채우고 있다 |
+| 8 | 올라가기 | 10 | 로비·배포층·편집층 3층 등반. 3,200편 전부 완결, 전부 같은 이야기 |
+| 9 | 다음 화 | 8 | 2화에서 내가 만든 것이 방을 가득 채우고 있다. **`break;` 를 도로 꽂는다** |
 
-## 엔딩 목록 (11종)
+## 엔딩 목록 (13종)
 
 | 화 | 종류 | 제목 |
 |---|---|---|
 | 1 | fail | 번아웃 |
 | 1 | advance | 결원 충원 |
 | 2 | fail | 조용한 배포 |
-| 2 | advance | 근원 발견 / 뒤늦은 근원 |
+| 2 | advance | **멈추지 않아** (뽑기) / 임시로 굳히다 / 3분의 정적 |
 | 3 | advance | 빈 작성자 / 조용한 관찰 |
 | 4 | advance | 필요하지 않음 |
 | 5 | advance | 먼저 갈게요 |
 | 6 | advance | 떠내려가다 |
 | 7 | advance | 같은 강을 따라 |
 | 8 | advance | 전부 같은 이야기 |
-| 9 | **final** | **다음 화** (진엔딩, 실력 3) |
+| 9 | **final** | **다음 화** (진엔딩, 되꽂기, 실력 3) |
 | 9 | final | 임시 조치 |
 | 9 | fail | 다음 사람에게 |
 
@@ -153,13 +175,14 @@ side-on stage composition, cinematic wide shot, film grain, no text
 | `e4_lock` | 붉은 출입등 | a silhouette holds a card to a turnstile reader glowing red in a dark lobby; the building beyond is fully lit and completely empty |
 | `e6_river` | 하류 | a silhouette floating face-up in a wide dark river at night, city lights receding behind, rain dimpling the surface |
 | `e7_start` | 모닥불 | several silhouettes gathered around a small fire under a bridge, wet clothes hung on a line, one lying on the ground waking up |
-| `e8_start` | 판박이 연재란 | a vast dark wall of identical glowing thumbnails receding into the distance, a tiny silhouette standing before it |
-| `e9_start` | 무한루프 | a colossal coiled machine of nested rings rises in an underground server hall, one small amber wedge embedded at its core; a tiny silhouette at the lower left |
-| `e9_boom` | 붕괴 | the coiled machine collapsing inward, fragments spiraling into a black void at its center, a small silhouette backing away at the frame edge |
+| `e2_loop` | 무한루프 등장 | a colossal coiled machine of nested rings rises in a server hall, one small amber wedge embedded at its core; a tiny silhouette crouching at the lower left |
+| `e2_boom` | 자멸 | the coiled machine collapsing inward on itself, fragments spiraling into a black void at its center, a small silhouette backing away holding a tiny glowing shard |
+| `e8_edit` | 판박이 연재란 | a vast dark wall of identical glowing thumbnails receding into the distance, a tiny silhouette standing before it |
+| `e9_read` | 빈 자리 | close view of a torn empty socket at the heart of a vast machine, a silhouette's hand reaching in holding a small amber shard |
 
 ### 제작 규모와 순서
 
-**장면 9장 + 인물 실루엣 5종.**
+**장면 10장 + 인물 실루엣 5종.** 트레일러에 쓸 스펙터클 4장(`e1_board`, `e1_client`, `e2_swarm`, `e2_boom`)을 먼저 만들면 예고편부터 뽑을 수 있다.
 
 1. **인물 실루엣 시트**를 먼저 1장 (주인공·김선임·채용봇·연재기·윤편집). 실루엣이라 한 장에 다 담긴다
 2. 그 시트를 레퍼런스로 물려 각 장면 생성
@@ -171,9 +194,14 @@ side-on stage composition, cinematic wide shot, film grain, no text
 
 ## 검증
 
-`validateEpisode` 로 9화 전부 오류 0. 플래그·아이템 획득 경로 대조 완료(고아 0건), 실력 최대 도달치 6(진엔딩 요구 3).
+`validateEpisode` 로 9화 73노드 전부 오류 0. 플래그·아이템 획득 경로 대조(고아 0건), 도감 5명 전원 해금 가능, 실력 최대 도달치 6(최고 요구 3).
 
-브라우저 완주 확인: 1화 → 9화 진엔딩 `다음 화` 도달. 5화에서 `사원증` 상실로 인사팀 항의가 잠기는 것까지 확인.
+브라우저 완주 확인:
+
+- 2화 `break;` 뽑기 → **멈추지 않아** 엔딩
+- 5화 `사원증` 상실로 "인사팀에 항의한다" 잠김
+- 8화 3층 등반 (로비 뒷문 → 배포 권한 우회 → 작가 계정 확인)
+- 9화 `내가뽑았다` 고백 선택지 노출 → 되꽂기 → 진엔딩 **다음 화**
 
 ## 확장 여지
 

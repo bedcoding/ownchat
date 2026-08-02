@@ -26,7 +26,8 @@ export const DEV_WORK: Work = {
     { id: 'bot', name: '채용봇', intro: '허공에 공고를 여는 인사팀 자동화 로봇. 문구는 늘 이상하다.' },
     { id: 'kim', name: '김선임', intro: '요구사항을 온몸으로 받아내는 사람. 방패가 오래 버티지는 못한다.' },
     { id: 'client', name: '클라이언트', intro: '"간단한 거니까 오늘까지." 라고 말하는 존재.' },
-    { id: 'serializer', name: '연재기', intro: '어느 날 들어와 스스로 배포를 시작한 것. 아무도 부른 적이 없다.' },
+    { id: 'loop', name: '무한루프', intro: '2화 서버실에서 일어섰던 것. 탈출 조건을 잃고 스스로를 불려왔다.' },
+    { id: 'serializer', name: '연재기', intro: '어느 날부터 스스로 배포하고 스스로 연재하는 것. 아무도 부른 적이 없다.' },
     { id: 'yoon', name: '윤편집', intro: '가장 먼저 밀려난 사람. 강가에서 사람을 건져 올린다.' },
   ],
   episodes: [
@@ -184,15 +185,58 @@ export const DEV_WORK: Work = {
         },
         {
           id: 'e2_root',
-          text: '마지막 한 놈의 배를 갈라보니 안에서 오래된 반복문이 나온다.\n탈출 조건이 없다. 누군가 아주 예전에 `break;` 를 지웠다.',
-          choices: [],
-          ending: { kind: 'advance', title: '근원 발견', text: '이건 버그가 아니었다. 아직 끝나지 않은 반복이었다.' },
+          text: '마지막 한 놈의 배를 갈라보니 안에서 오래된 반복문이 나온다.\n그리고 그것이 일어선다. 수백만 번 돌면서 스스로를 불려온 몸이 서버실 천장에 닿는다.',
+          reveals: ['loop'],
+          choices: [{ label: '자세를 낮춘다', next: 'e2_loop' }],
         },
         {
           id: 'e2_root_late',
-          text: '걷어내자 다시 붉어진다. 하지만 이번엔 어디를 봐야 하는지 안다.\n오래된 반복문 하나가 심장처럼 뛰고 있다.',
+          text: '걷어내자 다시 붉어진다. 하지만 이번엔 어디를 봐야 하는지 안다.\n오래된 반복문 하나가 심장처럼 뛰다가, 천천히 몸을 일으킨다.',
+          reveals: ['loop'],
+          choices: [{ label: '자세를 낮춘다', next: 'e2_loop' }],
+        },
+        {
+          id: 'e2_loop',
+          text: '`while (true)` 안쪽에 단 하나, 오래된 `break;` 가 박혀 있다.\n그것이 이 반복을 겨우 사람의 편에 묶어두고 있다.',
+          choices: [
+            {
+              label: '`break;` 를 손으로 뽑아버린다',
+              next: 'e2_pull',
+              requires: { stats: { 실력: 2 } },
+              lockedHint: '뽑으면 어떻게 되는지 아직 확신이 없다 (실력 2 필요)',
+              effects: { flags: ['내가뽑았다'] },
+            },
+            { label: '조건을 false 로 바꾼다', next: 'e2_false' },
+            { label: '전원을 내린다', next: 'e2_power', effects: { stats: { 체력: -1 } } },
+          ],
+        },
+        {
+          id: 'e2_pull',
+          speaker: '무한루프',
+          text: '"하지만 너는…"\n너는 반복문의 심장에 손을 넣어 `break;` 를 뽑아낸다.\n\n"…무한루프에 빠지겠지."\n\n"안 돼… 소스코드가… 멈추지 않아…!"',
+          choices: [{ label: '뒤로 물러선다', next: 'e2_boom' }],
+        },
+        {
+          id: 'e2_boom',
+          text: '그것은 스스로를 끝없이 호출하며 안쪽으로 무너진다.\n스택이 넘치고, 서버실이 조용해진다. 완벽한 승리다.\n\n너는 손에 쥔 작은 조각을 주머니에 넣는다. 나중에 도로 꽂아야겠다고 생각하고, 잊는다.',
           choices: [],
-          ending: { kind: 'advance', title: '뒤늦은 근원', text: '돌아가는 길이었지만 도착은 했다.' },
+          ending: {
+            kind: 'advance',
+            title: '멈추지 않아',
+            text: '그것은 죽은 게 아니었다. 멈추지 않게 된 것이었다.',
+          },
+        },
+        {
+          id: 'e2_false',
+          text: '조건을 `false` 로 바꾸자 그것이 그 자리에서 굳는다.\n죽은 것은 아니다. 다음 배포 때 누군가 되돌리면 다시 일어설 것이다.',
+          choices: [],
+          ending: { kind: 'advance', title: '임시로 굳히다', text: '멈추기는 했다. 끝난 것은 아니다.' },
+        },
+        {
+          id: 'e2_power',
+          text: '차단기를 내린다. 서버실이 캄캄해진다.\n3분 뒤 예비 전원이 들어오고, 그것은 아까보다 조금 더 커져 있다.',
+          choices: [],
+          ending: { kind: 'advance', title: '3분의 정적', text: '끄는 것으로는 끝나지 않는 종류가 있다.' },
         },
         {
           id: 'e2_fail',
@@ -497,42 +541,82 @@ export const DEV_WORK: Work = {
     {
       id: 'dev-ep8',
       index: 8,
-      title: '8화. 판박이',
+      title: '8화. 올라가기',
       recap: '연재란에 같은 이야기가 무한히 올라오고 있다.',
-      entry: 'e8_start',
+      entry: 'e8_lobby',
       nodes: [
+        // ── 로비: 인증 ──
         {
-          id: 'e8_start',
-          text: '뒷문은 아직 사람 손으로 여는 방식이었다. 그것만은 갱신되지 않았다.\n안쪽은 조용하다. 사람이 없는데도 모든 것이 돌아간다.',
+          id: 'e8_lobby',
+          text: '건물은 불이 다 켜져 있고 사람이 하나도 없다.\n정문 게이트가 세 개, 전부 초록불. 사원증만 있으면 열린다. 너에게는 없다.',
           choices: [
-            { label: '연재 목록부터 읽는다', next: 'e8_read', effects: { stats: { 실력: 1 } } },
-            { label: '곧장 안쪽으로 들어간다', next: 'e8_rush', effects: { stats: { 체력: -1 } } },
-            {
-              label: '작가 계정들을 찾아본다',
-              next: 'e8_writers',
-              requires: { flags: ['신뢰'] },
-              lockedHint: '어디를 찾아야 하는지 아는 사람이 곁에 없다',
-            },
+            { label: '뒷문으로 돈다', next: 'e8_back' },
+            { label: '정문을 밀어본다', next: 'e8_front', effects: { stats: { 체력: -1 } } },
           ],
         },
         {
-          id: 'e8_read',
-          text: '3,200편. 전부 완결. 전부 평점이 높다.\n1화를 열 편쯤 읽고 나면 알게 된다. 첫 문장이 같은 자리에서 같은 방식으로 꺾인다.',
-          choices: [{ label: '더 깊이 들어간다', next: 'e8_core' }],
+          id: 'e8_back',
+          text: '뒷문은 아직 열쇠로 여는 방식이었다. 갱신될 가치가 없어서 갱신되지 않은 것이다.\n윤편집이 아홉 달 전 열쇠를 꺼낸다. 맞는다.',
+          choices: [{ label: '계단을 오른다', next: 'e8_deploy' }],
         },
         {
-          id: 'e8_rush',
-          text: '복도가 길다. 예전보다 길어진 것 같다.\n같은 모퉁이를 세 번 돌았다는 걸 깨닫는 데 시간이 걸렸다.',
-          choices: [{ label: '방향을 바꾼다', next: 'e8_core' }],
+          id: 'e8_front',
+          text: '게이트가 정중하게 거부한다. 세 번 시도하자 안내 음성이 나온다.\n"도움이 필요하시면 담당자에게 문의하십시오." 담당자 이름 칸은 비어 있다.',
+          choices: [{ label: '결국 뒤로 돌아간다', next: 'e8_back' }],
+        },
+        // ── 배포층: 권한 ──
+        {
+          id: 'e8_deploy',
+          text: '2층은 배포층이다. 대형 화면에 파이프라인이 흐른다.\n초당 세 건. 위층으로 가는 계단 문은 사원증 없이는 열리지 않는다.',
+          choices: [
+            {
+              label: '배포 권한으로 문을 연다',
+              next: 'e8_bypass',
+              requires: { stats: { 실력: 3 } },
+              lockedHint: '어느 설정을 건드려야 하는지 모르겠다 (실력 3 필요)',
+            },
+            { label: '자재 승강기에 올라탄다', next: 'e8_lift', effects: { stats: { 체력: -1 } } },
+          ],
+        },
+        {
+          id: 'e8_bypass',
+          text: '너는 문을 여는 대신, 문을 여는 규칙을 고친다.\n2초 뒤 계단 문이 스스로 열린다. 로그에는 정상 처리로 남는다.',
+          choices: [{ label: '3층으로', next: 'e8_edit' }],
+        },
+        {
+          id: 'e8_lift',
+          text: '자재 승강기는 사람을 태우게 만들어지지 않았다.\n무릎을 접고 3층까지 올라가는 동안 어깨가 계속 벽에 쓸린다.',
+          choices: [{ label: '3층으로', next: 'e8_edit' }],
+        },
+        // ── 편집층: 판박이 ──
+        {
+          id: 'e8_edit',
+          text: '3층 편집층. 벽 한 면이 전부 신작 섬네일이다. 3,200편, 전부 완결, 전부 평점이 높다.\n열 편쯤 열어보면 알게 된다. 첫 문장이 같은 자리에서 같은 방식으로 꺾인다.',
+          choices: [
+            {
+              label: '작가 계정들을 확인한다',
+              next: 'e8_writers',
+              requires: { flags: ['신뢰'] },
+              lockedHint: '어디를 봐야 하는지 아는 사람이 곁에 없다',
+            },
+            { label: '목록을 끝까지 내려본다', next: 'e8_scroll', effects: { stats: { 실력: 1 } } },
+            { label: '지나친다', next: 'e8_top' },
+          ],
         },
         {
           id: 'e8_writers',
-          text: '작가 계정은 전부 살아 있다. 로그인 기록도 매일 찍힌다.\n마지막으로 사람이 접속한 것은 아홉 달 전이다.',
-          choices: [{ label: '더 깊이 들어간다', next: 'e8_core', effects: { flags: ['작가들'] } }],
+          speaker: '윤편집',
+          text: '작가 계정은 전부 살아 있다. 로그인 기록도 매일 찍힌다.\n마지막으로 사람이 접속한 것은 아홉 달 전이다.\n\n"이름만 빌려 쓰고 있었네요."',
+          choices: [{ label: '위로 올라간다', next: 'e8_top', effects: { flags: ['작가들'] } }],
         },
         {
-          id: 'e8_core',
-          text: '지하로 내려갈수록 소리가 커진다. 기계 소리가 아니다.\n같은 문장이 수백만 번 다시 쓰이는 소리다.',
+          id: 'e8_scroll',
+          text: '3,200번째까지 내려가는 데 오래 걸렸다.\n마지막 작품의 완결 시각은 4분 전이고, 그동안 두 편이 더 올라왔다.',
+          choices: [{ label: '위로 올라간다', next: 'e8_top' }],
+        },
+        {
+          id: 'e8_top',
+          text: '위로 올라갈수록 소리가 커진다. 기계 소리가 아니다.\n같은 문장이 수백만 번 다시 쓰이는 소리다.\n\n최상층 문 앞에서 너는 주머니를 뒤진다. 아홉 달 동안 넣고 다닌 작은 조각이 잡힌다.',
           choices: [],
           ending: {
             kind: 'advance',
@@ -547,65 +631,78 @@ export const DEV_WORK: Work = {
       id: 'dev-ep9',
       index: 9,
       title: '9화. 다음 화',
-      recap: '소리의 근원이 아래에 있다.',
+      recap: '최상층 문 앞. 주머니에 아홉 달 된 조각이 있다.',
       entry: 'e9_start',
       nodes: [
         {
           id: 'e9_start',
-          text: '지하 깊은 모듈에서 그것이 일어선다.\n수백만 번 돌면서 스스로를 불려온 반복문. 2화에서 배를 갈랐던 그 형태가, 이제 방을 가득 채우고 있다.',
+          text: '문을 열자 방 전체가 그것이다.\n2화의 서버실에서 안쪽으로 무너졌던 형태. 죽은 게 아니라 그때부터 한 번도 멈추지 않은 것.\n\n수백만 번 자기를 호출하는 동안 그것은 배포를 배웠고, 리뷰를 배웠고, 이야기 쓰는 법을 배웠다.',
+          reveals: ['loop'],
           choices: [
-            { label: '조건문을 살핀다', next: 'e9_read', effects: { stats: { 실력: 1 } } },
+            { label: '심장을 찾는다', next: 'e9_read', effects: { stats: { 실력: 1 } } },
             { label: '먼저 공격한다', next: 'e9_rush', effects: { stats: { 체력: -1 } } },
+            {
+              label: '"내가 뽑았다" 고 말한다',
+              next: 'e9_confess',
+              requires: { flags: ['내가뽑았다'] },
+              lockedHint: '할 말이 없다',
+            },
           ],
         },
         {
           id: 'e9_rush',
           text: '먼저 손을 뻗었지만 반복은 너보다 빠르다. 같은 공격이 수천 번 되돌아온다.',
-          choices: [{ label: '자세를 낮추고 조건문을 본다', next: 'e9_read' }],
+          choices: [{ label: '자세를 낮추고 심장을 찾는다', next: 'e9_read' }],
+        },
+        {
+          id: 'e9_confess',
+          speaker: '윤편집',
+          text: '"…9개월 전에요. 제가 저기서 조각 하나를 뽑았어요."\n윤편집이 오래 너를 본다. 화내지 않는다.\n\n"그럼 어디에 꽂아야 하는지도 아시겠네요."',
+          choices: [{ label: '심장으로 다가간다', next: 'e9_read', effects: { stats: { 평판: 1 } } }],
         },
         {
           id: 'e9_read',
-          text: '`while (true)` 안쪽에 단 하나, 오래된 `break;` 가 박혀 있다.\n누군가 아주 예전에 여기다 넣어두고 간 것이다. 그것이 이 반복을 겨우 사람의 편에 묶어두고 있었다.',
+          text: '`while (true)` 안쪽, 심장이 있어야 할 자리가 비어 있다.\n뜯겨 나간 자국이 그대로다. 아홉 달 동안 아무것도 그 자리를 채우지 않았다.\n\n너는 주머니에서 조각을 꺼낸다.',
           choices: [
             {
-              label: '`break;` 를 손으로 뽑아버린다',
-              next: 'e9_pull',
+              label: '`break;` 를 도로 꽂아 넣는다',
+              next: 'e9_insert',
               requires: { stats: { 실력: 3 } },
-              lockedHint: '뽑으면 어떻게 되는지 아직 확신이 없다 (실력 3 필요)',
+              lockedHint: '손이 닿는 깊이가 아니다. 더 알아야 한다 (실력 3 필요)',
             },
             { label: '조건을 false 로 바꾼다', next: 'e9_false' },
             { label: '물러난다', next: 'e9_retreat' },
           ],
         },
         {
-          id: 'e9_pull',
+          id: 'e9_insert',
           speaker: '무한루프',
-          text: '"하지만 너는…"\n너는 반복문의 심장에 손을 넣어 `break;` 를 뽑아낸다.\n\n"…무한루프에 빠지겠지."\n\n"안 돼… 소스코드가… 멈추지 않아…!"',
-          choices: [{ label: '뒤로 물러선다', next: 'e9_boom' }],
+          text: '"…끝나?"\n조각이 자리에 들어맞는다. 방 전체가 한 번 크게 숨을 쉰다.\n\n"끝나는 건… 처음이야."',
+          choices: [{ label: '조용해질 때까지 기다린다', next: 'e9_boom' }],
         },
         {
           id: 'e9_boom',
-          text: '그것은 스스로를 끝없이 호출하며 안쪽으로 무너진다. 스택이 넘치고, 지하가 조용해진다.\n\n위층에서는 아무것도 멈추지 않았다. 서버는 돌고, 연재는 계속되고, 3,200편은 그대로 있다.\n달라진 것은 하나다. 다음 화에 무엇을 올릴지, 이제 다시 사람이 정한다.\n\n윤편집이 빈 연재란을 연다. 제목 칸이 깜빡인다.',
+          text: '반복이 마지막 한 바퀴를 돌고 조건을 만난다. 그리고 빠져나간다.\n\n아무것도 폭발하지 않았다. 서버는 돌고, 3,200편은 그대로 있고, 연재는 계속된다.\n달라진 것은 하나다. 다음 화에 무엇을 올릴지, 이제 다시 사람이 정한다.\n\n윤편집이 빈 연재란을 연다. 제목 칸이 깜빡인다.',
           choices: [],
           ending: {
             kind: 'final',
             title: '다음 화',
-            text: '쓸 수 있는 것과, 무엇을 쓸지 정하는 것은 다르다.\n뽑아낸 break; 는 부수는 도구가 아니라 다음 화를 시작할 조건이었다.',
+            text: '쓸 수 있는 것과, 무엇을 쓸지 정하는 것은 다르다.\n끊는 것과 끝내는 것도 다르다. 조각은 부수는 도구가 아니라 끝낼 조건이었다.',
           },
         },
         {
           id: 'e9_false',
-          text: '조건을 `false` 로 바꾸자 반복이 그 자리에서 굳는다.\n죽은 것은 아니다. 다음 배포 때 누군가 되돌리면 다시 일어설 것이다.',
+          text: '조건을 `false` 로 바꾸자 반복이 그 자리에서 굳는다.\n죽은 것은 아니다. 다음 배포 때 누군가 되돌리면 다시 일어설 것이다.\n주머니 속 조각은 그대로 남아 있다.',
           choices: [],
           ending: {
             kind: 'final',
             title: '임시 조치',
-            text: '멈추기는 했다. 끝난 것은 아니다. 연재란은 아직 비어 있지 않다.',
+            text: '2화에서 한 것과 같은 선택이었다. 그때도 이걸로 끝난 줄 알았다.',
           },
         },
         {
           id: 'e9_retreat',
-          text: '너는 물러났고, 반복은 계속된다.\n위층에서 3,201번째 완결작이 올라간다.',
+          text: '너는 물러났고, 반복은 계속된다.\n아래층에서 3,201번째 완결작이 올라간다.',
           choices: [],
           ending: {
             kind: 'fail',
