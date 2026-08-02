@@ -103,9 +103,9 @@ export default function NodeForm({ work, episode, node, onChange, onDelete, isEn
           }}
         >
           <option value="">엔딩 아님 (선택지로 이어짐)</option>
-          <option value="advance">advance — 목표 달성, 다음 화로</option>
-          <option value="fail">fail — 이 화 다시</option>
-          <option value="final">final — 완결</option>
+          <option value="advance">advance (목표 달성, 다음 화로)</option>
+          <option value="fail">fail (이 화 다시)</option>
+          <option value="final">final (완결)</option>
         </select>
       </div>
 

@@ -183,7 +183,7 @@ export function validateEpisode(episode: Episode): GraphIssue[] {
   for (const node of episode.nodes) {
     if (node.ending) continue;
     if (node.choices.length === 0) {
-      issues.push({ level: 'error', nodeId: node.id, message: '선택지도 엔딩도 없습니다 — 진행이 막힙니다' });
+      issues.push({ level: 'error', nodeId: node.id, message: '선택지도 엔딩도 없어서 진행이 막힙니다' });
     }
     for (const c of node.choices) {
       if (!ids.has(c.next)) {

@@ -162,7 +162,7 @@ export default function Runner({ work, persist, initial, onExit }: Props) {
 
 function SceneArt({ node }: { node: StoryNode }) {
   return (
-    <div className="scene-art">
+    <div className={`scene-art${node.image ? '' : ' empty'}`}>
       {node.image ? (
         // 저작 시점에 넣은 컷. 데이터 URL이거나 로컬 경로라 next/image 최적화 대상이 아니다.
         // eslint-disable-next-line @next/next/no-img-element

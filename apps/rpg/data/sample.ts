@@ -27,7 +27,7 @@ export const SAMPLE_WORK: Work = {
     {
       id: 'ep1',
       index: 1,
-      title: '1화 — 마른 여울',
+      title: '1화. 마른 여울',
       entry: 'e1_start',
       nodes: [
         {
@@ -49,7 +49,7 @@ export const SAMPLE_WORK: Work = {
             {
               label: '빚을 대신 갚아주겠다고 한다',
               requires: { stats: { 설득: 2 } },
-              lockedHint: '설득 2 필요 — 아직 그를 설득할 말을 못 찾았다',
+              lockedHint: '아직 그를 설득할 말을 못 찾았다 (설득 2 필요)',
               effects: { flags: ['toran_debt'], stats: { 설득: 1 } },
               next: 'e1_toran_join',
             },
@@ -82,7 +82,7 @@ export const SAMPLE_WORK: Work = {
             {
               label: '무엇을 봤는지 캐묻는다',
               requires: { stats: { 통찰: 2 } },
-              lockedHint: '통찰 2 필요 — 그가 숨기는 게 있다는 건 알겠는데 짚이지 않는다',
+              lockedHint: '숨기는 게 있다는 건 알겠는데 짚이지 않는다 (통찰 2 필요)',
               effects: { flags: ['ire_join', 'saw_hollow'], items: ['이레의 화살'] },
               next: 'e1_ire_join',
             },
@@ -142,7 +142,7 @@ export const SAMPLE_WORK: Work = {
     {
       id: 'ep2',
       index: 2,
-      title: '2화 — 여울 바닥',
+      title: '2화. 여울 바닥',
       entry: 'e2_start',
       recap: '토란과 이레를 동행으로 얻었다. 셋은 마른 여울로 내려간다.',
       nodes: [
@@ -182,7 +182,7 @@ export const SAMPLE_WORK: Work = {
             {
               label: '힘으로 밀어낸다',
               requires: { stats: { 무력: 2 } },
-              lockedHint: '무력 2 필요 — 돌이 꿈쩍도 하지 않는다',
+              lockedHint: '돌이 꿈쩍도 하지 않는다 (무력 2 필요)',
               next: 'e2_open',
             },
             {
@@ -218,7 +218,7 @@ export const SAMPLE_WORK: Work = {
     {
       id: 'ep3',
       index: 3,
-      title: '3화 — 재의 것',
+      title: '3화. 재의 것',
       entry: 'e3_start',
       recap: '문 너머에서 사람 모양의 것과 마주쳤다.',
       nodes: [

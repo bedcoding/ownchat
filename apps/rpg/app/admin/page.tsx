@@ -32,7 +32,7 @@ export default function AdminPage() {
         : [...works, work];
       setWorks(next);
       savePublished(next);
-      setNotice(`"${work.title}" 발행됨 — 플레이 화면에서 바로 보입니다.`);
+      setNotice(`"${work.title}" 발행했습니다. 플레이 화면에서 바로 보입니다.`);
       setTimeout(() => setNotice(null), 3000);
     },
     [works],
@@ -46,7 +46,7 @@ export default function AdminPage() {
     }
     setDraft(result.work);
     setView({ kind: 'work' });
-    setNotice(`"${result.work.title}" 불러옴 — 발행해야 플레이에 반영됩니다.`);
+    setNotice(`"${result.work.title}" 불러왔습니다. 발행해야 플레이에 반영됩니다.`);
   }, []);
 
   if (!hydrated) return <div className="admin-wide" aria-busy="true" />;
