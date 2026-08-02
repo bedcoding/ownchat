@@ -101,29 +101,47 @@ e3_read ──┬─ break; 를 뽑는다 [실력 3] → e3_pull → e3_boom [FI
 
 ## 장면별 이미지 요구사항
 
-아직 이미지가 없다. 붙일 때 참고할 명세다. 목표 화풍은 **정교한 연필 스케치 인물화**(호텔 더스크 계열) 또는 **고대비 실루엣 표현주의**(Beholder 계열)이며, 코드로 그린 벡터로는 도달할 수 없어 외부 생성 도구를 쓴다.
+아직 이미지가 없다. 붙일 때 참고할 명세다.
 
-전 장면 공통 스타일 앵커 (프롬프트 앞에 붙여 일관성 유지):
+### 화풍: 인물은 실루엣, 배경은 묘사
+
+정교한 연필 스케치 인물화도 후보였으나 **실루엣 표현주의**로 정했다. 이유:
+
+1. **캐릭터 일관성이 사실상 공짜다.** 생성 이미지의 최대 난점은 "같은 인물을 여러 장면에서 똑같이" 그리는 것이다. 얼굴을 그리면 장면마다 딴사람이 되고, 보는 사람이 얼굴을 응시하기 때문에 즉시 들킨다. 검은 형체에 흰 눈 두 점은 재현이 자동이다.
+2. **소재가 은유적이다.** 주인공이 싸우는 것은 반복문과 버그떼다. 실사 스케치로 그리면 우스워지고, 기호로 그리면 바로 읽힌다.
+3. **실패가 우아하다.** 실루엣은 어긋나도 스타일로 보인다. 실사는 조금만 어긋나도 불쾌한 골짜기에 빠진다.
+4. **앱 톤과 맞는다.** 다크 배경·앰버 액센트·명조체에 그대로 붙는다.
+
+핵심은 **인물만 실루엣이고 배경은 제대로 그린다**는 점이다. 배경은 장면마다 달라도 아무도 이상하게 여기지 않으므로, 일관성 리스크가 인물에만 몰려 있고 그 인물을 실루엣으로 처리하면 리스크가 사라진다. 화면 밀도는 배경이 책임진다.
+
+전 장면 공통 스타일 앵커 (프롬프트 앞에 붙인다):
 
 ```
-monochrome pencil sketch, rotoscoped realism, heavy cross-hatching,
-muted sepia-grey palette with a single warm amber accent,
-cinematic wide shot, film grain, high contrast, no text
+flat black silhouette figures with small glowing white eyes and no facial features,
+set against a painted environment rendered in detail,
+dim desaturated interior, deep shadow, one warm amber light source,
+side-on stage composition, cinematic wide shot, film grain, no text
 ```
 
-| 노드 | 장면 | 프롬프트 (스타일 앵커 뒤에 붙임) |
+| 노드 | 장면 | 프롬프트 (앵커 뒤에 붙인다) |
 |---|---|---|
-| `e1_board` | 채용봇이 허공에 공고를 연다 | a humanoid office robot raises one arm; a circular tear in the air opens above a dark empty office, cold light pouring out over cubicles |
-| `e1_client` | 요구사항을 몸으로 받는 동료 | a lone figure stands braced in a meeting room, arms raised, absorbing a storm of paper documents flying at them; another figure crouches behind |
-| `e2_swarm` | 버그떼와 주석 두 획 | angular insect-like shapes swarming out of a monitor toward the viewer; two bright diagonal slashes cut across the frame, the front rank crumbling to ash |
-| `e3_start` | 무한루프 등장 | a colossal coiled mechanical serpent made of nested rings rises in an underground server hall, a single small glowing wedge embedded at its core |
-| `e3_boom` | 붕괴 | the coiled machine collapsing inward on itself, fragments spiraling into a dark void at the center, a small figure backing away at the edge |
+| `e1_board` | 채용봇이 허공에 공고를 연다 | a boxy robot silhouette raises one arm; a circular tear of cold blue light opens in the air above rows of empty office cubicles at night |
+| `e1_client` | 요구사항을 몸으로 받는 동료 | a silhouette stands braced with both arms raised in a glass meeting room, absorbing a storm of paper documents flying in from the right; a second silhouette crouches behind it |
+| `e2_swarm` | 버그떼와 주석 두 획 | angular red insect-like shapes pouring out of a glowing monitor toward the viewer; two bright diagonal slashes cut across the frame and the front rank crumbles to grey ash |
+| `e3_start` | 무한루프 등장 | a colossal coiled machine of nested rings rises in an underground server hall, one small amber wedge embedded at its core; a tiny silhouette stands at the lower left facing it |
+| `e3_boom` | 붕괴 | the coiled machine collapsing inward, fragments spiraling into a black void at its center, a small silhouette backing away at the frame edge |
 
-캐릭터 일관성이 관건이다. 장면마다 따로 생성하면 인물이 딴사람이 된다. 권장 순서:
+### 제작 규모와 순서
 
-1. 인물 **캐릭터 시트**를 먼저 1장 생성 (주인공·김선임·채용봇 정면/측면)
-2. 그 이미지를 레퍼런스로 물려 각 장면을 image-to-image 로 생성
-3. 보정은 사람이
+데모에 필요한 것은 **장면 5장 + 인물 실루엣 4종**이다. 많지 않다.
+
+1. **인물 실루엣 시트**를 먼저 1장 (주인공·김선임·채용봇·클라이언트). 실루엣이라 한 장에 다 담긴다
+2. 그 시트를 레퍼런스로 물려 각 장면 생성
+3. 배경은 자유롭게 — 일관성을 지킬 필요가 없는 유일한 요소다
+4. 파일은 `apps/rpg/public/art/` 에 두고 노드의 `image` 필드에 `/art/파일명` 으로 연결
+
+> 생성 도구는 정하지 않았다. 이 저장소는 외부 이미지 API에 의존하지 않는다.
+> 실제 제품에서는 원작 웹툰 컷을 쓰므로 이미지 생성 자체가 필요 없다 — 데모 자산에 한정된 문제다.
 
 ## 확장 여지
 
