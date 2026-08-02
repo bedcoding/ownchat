@@ -23,6 +23,23 @@
 
 ---
 
+## 이 저장소에는 앱이 둘 있다
+
+같은 원칙(추론 비용을 서비스가 떠안지 않는다) 위에 올린 서로 다른 물건이다.
+
+| | ownchat | rpg |
+|---|---|---|
+| 무엇 | AI 채팅 (데스크톱 앱 + 웹) | 회차 진행형 선택지 게임 + 저작 도구 |
+| 플레이 중 AI | 매 턴 호출 | **호출 없음** |
+| AI 를 쓰는 시점 | 대화할 때마다 | 관리자가 트리를 만들 때 한 번 |
+| 실행 | `npm run desktop` | `npm run rpg` |
+
+`apps/rpg` 는 웹툰 한 회차를 선택지 트리 한 편으로 만드는 실험이다. 플레이어 런타임에는
+네트워크 호출이 한 줄도 없고, AI 는 관리자가 회차 이미지에서 트리 초안을 뽑을 때만 돈다.
+자세한 것은 [apps/rpg/README.md](apps/rpg/README.md).
+
+---
+
 ## 구조
 
 ```
@@ -40,6 +57,7 @@ UI는 하나다. 전송 계층만 3개고, 실행 환경에 따라 자동으로 
 | `packages/core` | Claude Code CLI를 구동하는 순수 로직 (HTTP도 UI도 모른다) |
 | `apps/desktop` | Electron 앱 — 구독 요금 경로 |
 | `apps/web` | Next.js UI — 데스크톱 렌더러 겸 호스팅 웹사이트 |
+| `apps/rpg` | 회차 진행형 선택지 게임 + 관리자 저작 도구 (플레이 중 AI 호출 0) |
 | `packages/bridge` | 호스팅 웹에서 구독을 쓰기 위한 로컬 HTTP 브리지 |
 
 ---
@@ -80,6 +98,8 @@ npm run dev:web     # 터미널 2 — http://localhost:3000
 | `npm run desktop:dist` | 설치 파일까지 빌드 |
 | `npm run dev:web` | 웹 UI 개발 서버 |
 | `npm run build` | 웹 UI 정적 빌드 (`apps/web/out` — 렌더러 겸 배포물) |
+| `npm run rpg` | 선택지 게임 개발 서버 (`localhost:3200`) |
+| `npm run rpg:build` | 선택지 게임 정적 빌드 |
 | `npm run bridge` | 로컬 브리지 |
 | `npm run bridge:token` | 페어링 코드 출력 |
 
@@ -92,9 +112,13 @@ npm run dev:web     # 터미널 2 — http://localhost:3000
 | [docs/STATUS.md](docs/STATUS.md) | **작업 현황·인수인계** — 검증된 것, 남은 일, 함정 목록 |
 | [docs/POLICY.md](docs/POLICY.md) | 정책 근거와 구조 결정 (왜 이렇게 만들었나) |
 | [packages/bridge/README.md](packages/bridge/README.md) | 브리지 API·옵션·보안 |
+| [apps/rpg/README.md](apps/rpg/README.md) | 선택지 게임 — 실행법·구조 |
+| [apps/rpg/docs/STATUS.md](apps/rpg/docs/STATUS.md) | 선택지 게임 작업 현황·함정 |
+| [apps/rpg/docs/DEVQUEST.md](apps/rpg/docs/DEVQUEST.md) | 샘플 시나리오 9화 전체 설계 |
 
 **이어서 작업하는 사람은 [docs/STATUS.md](docs/STATUS.md) 부터 읽으세요.**
 함정 목록(4장)을 모르면 같은 데서 시간을 버립니다.
+선택지 게임 쪽만 볼 거면 [apps/rpg/docs/STATUS.md](apps/rpg/docs/STATUS.md) 로 바로 가면 됩니다.
 
 ---
 
