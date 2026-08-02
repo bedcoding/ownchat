@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { brand } from '@/lib/brand';
 import { loadPlay, loadPlayableWorks, savePlay } from '@/lib/storage';
 import type { PlayState, Work } from '@/lib/types';
 import Runner from './Runner';
@@ -74,7 +75,7 @@ export default function PlayPage() {
                   setWorkId(w.id);
                 }}
               >
-                <div className="t">{w.title}</div>
+                <div className="t">{brand(w.title)}</div>
                 <div className="d">
                   {w.episodes.length}화 수록 · 등장인물 {w.characters.length}명
                   {w.rating === 'adult' ? ' · 성인' : ''}

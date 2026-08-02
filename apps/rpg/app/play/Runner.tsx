@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { brandWork } from '@/lib/brand';
 import {
   arriveAt,
   choose,
@@ -28,7 +29,13 @@ interface Props {
  * 트리 러너 — 플레이어 런타임과 관리자 미리보기가 공유한다.
  * 네트워크 호출이 한 줄도 없다. 이 화면은 비행기 모드에서도 그대로 돈다.
  */
-export default function Runner({ work, persist, initial, onExit }: Props) {
+export default function Runner({ work: rawWork, persist, initial, onExit }: Props) {
+  /*
+   * 화면에 그릴 때만 플랫폼 이름을 치환한다. 저작 도구가 들고 있는 원본은
+   * 토큰(`{PLATFORM}`)을 유지해야 발행 JSON 에 실명이 새지 않는다.
+   */
+  const work = useMemo(() => brandWork(rawWork), [rawWork]);
+
   const [state, setState] = useState<PlayState>(() => {
     if (initial && initial.workId === work.id) return initial;
     const s = initialState(work);

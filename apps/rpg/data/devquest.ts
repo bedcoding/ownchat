@@ -33,7 +33,7 @@ export const DEV_WORK: Work = {
       nodes: [
         {
           id: 'e1_start',
-          text: '스프린트 3일차. 남은 티켓 47개, 남은 사람 한 명.\n모니터 불빛만 살아 있는 사무실에서 너는 아직 로그아웃하지 못했다.',
+          text: '{PLATFORM} 스프린트 3일차. 남은 티켓 47개, 남은 사람 한 명.\n모니터 불빛만 살아 있는 사무실에서 너는 아직 로그아웃하지 못했다.',
           choices: [
             { label: '티켓 보드를 연다', next: 'e1_board' },
             {
