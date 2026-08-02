@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <!-- 탈출 조건을 잃고 스스로 불어난 반복문. 중첩 중괄호가 몸통을 이룬다. -->
+  <defs>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8c3fd6" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#3a1a5a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="400" height="300" fill="#0d0d0f"/>
+  <rect y="242" width="400" height="58" fill="#131318"/>
+
+  <!-- 중첩된 반복 고리 -->
+  <g fill="none" stroke="#7a4fd6" stroke-linecap="round">
+    <ellipse cx="240" cy="132" rx="132" ry="104" stroke-width="1" opacity="0.18"/>
+    <ellipse cx="240" cy="132" rx="112" ry="88" stroke-width="1.4" opacity="0.3"/>
+    <ellipse cx="240" cy="132" rx="92" ry="72" stroke-width="2" opacity="0.5"/>
+    <ellipse cx="240" cy="132" rx="72" ry="56" stroke-width="2.6" opacity="0.75"/>
+    <ellipse cx="240" cy="132" rx="52" ry="40" stroke-width="3.2" opacity="0.95"/>
+  </g>
+  <ellipse cx="240" cy="132" rx="44" ry="34" fill="url(#core)"/>
+
+  <!-- 심장에 박힌 break -->
+  <g transform="translate(240 132)">
+    <rect x="-30" y="-11" width="60" height="22" rx="3" fill="#0d0d0f" stroke="#c9963c" stroke-width="1.6"/>
+    <text x="0" y="4.5" text-anchor="middle" font-family="monospace" font-size="11"
+          fill="#e8b45c" letter-spacing="0.5">break;</text>
+  </g>
+
+  <!-- 조건문 -->
+  <text x="240" y="46" text-anchor="middle" font-family="monospace" font-size="13"
+        fill="#b78fe8" opacity="0.9">while (true)</text>
+
+  <!-- 뻗어나온 촉수 -->
+  <g fill="none" stroke="#6a3fb8" stroke-width="3.4" stroke-linecap="round" opacity="0.8">
+    <path d="M132 116 C104 106 88 130 68 122"/>
+    <path d="M138 168 C108 182 96 162 72 174"/>
+    <path d="M356 108 C378 96 386 118 396 110"/>
+  </g>
+
+  <!-- 마주 선 개발자 -->
+  <g transform="translate(62 196)" fill="#232630" stroke="#3d414c" stroke-width="1.4">
+    <circle cx="0" cy="-22" r="10"/>
+    <path d="M-13 -7 L13 -7 L16 42 L-16 42 Z"/>
+    <path d="M13 4 L34 -6" stroke-width="4.4" stroke-linecap="round"/>
+  </g>
+</svg>

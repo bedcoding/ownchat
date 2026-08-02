@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <!-- 쏟아지는 요구사항을 동료가 몸으로 받아내는 장면. -->
+  <defs>
+    <linearGradient id="impact" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0%" stop-color="#c9563c" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#c9563c" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="300" fill="#0d0d0f"/>
+  <rect y="228" width="400" height="72" fill="#141519"/>
+  <rect x="150" y="0" width="250" height="300" fill="url(#impact)"/>
+
+  <!-- 요구사항 화살 -->
+  <g stroke="#e0704f" stroke-width="2.2" stroke-linecap="round" opacity="0.9">
+    <path d="M392 52 L268 96"/>
+    <path d="M392 96 L258 128"/>
+    <path d="M392 140 L262 158"/>
+    <path d="M392 186 L268 190"/>
+    <path d="M392 226 L276 216"/>
+  </g>
+  <g fill="#f0a08a" font-family="monospace" font-size="7.5" opacity="0.8">
+    <text x="300" y="46">오늘까지</text>
+    <text x="306" y="90">간단한 건데</text>
+    <text x="312" y="134">얼굴인식만</text>
+    <text x="316" y="180">추가로</text>
+  </g>
+
+  <!-- 막아선 동료 -->
+  <g transform="translate(226 152)">
+    <path d="M0 -44 L34 -22 L34 34 L0 58 L-34 34 L-34 -22 Z"
+          fill="#1c2733" stroke="#5a8fb8" stroke-width="2.6" opacity="0.95"/>
+    <path d="M0 -30 L22 -16 L22 26 L0 42 L-22 26 L-22 -16 Z"
+          fill="none" stroke="#7fb8e0" stroke-width="1" opacity="0.55"/>
+    <g stroke="#9fd4ff" stroke-width="1.6" opacity="0.7">
+      <path d="M34 -8 L46 -14"/>
+      <path d="M34 8 L48 6"/>
+      <path d="M32 24 L44 28"/>
+    </g>
+  </g>
+
+  <!-- 뒤에 선 주인공 -->
+  <g transform="translate(120 168)" fill="#232630" stroke="#3d414c" stroke-width="1.4">
+    <circle cx="0" cy="-24" r="11"/>
+    <path d="M-15 -8 L15 -8 L19 46 L-19 46 Z"/>
+  </g>
+  <rect x="96" y="214" width="48" height="4" fill="#1a1c22"/>
+</svg>

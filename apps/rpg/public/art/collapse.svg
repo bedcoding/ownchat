@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <!-- break; 를 잃은 반복문이 스스로를 호출하며 안쪽으로 무너진다. -->
+  <defs>
+    <radialGradient id="void" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000000"/>
+      <stop offset="60%" stop-color="#1a0e2a"/>
+      <stop offset="100%" stop-color="#0d0d0f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="400" height="300" fill="#0d0d0f"/>
+  <circle cx="204" cy="140" r="130" fill="url(#void)"/>
+
+  <!-- 안쪽으로 빨려드는 파편 -->
+  <g fill="#4a2d78" opacity="0.85">
+    <rect x="60" y="52" width="26" height="12" rx="2" transform="rotate(-22 73 58)"/>
+    <rect x="316" y="74" width="22" height="10" rx="2" transform="rotate(28 327 79)"/>
+    <rect x="84" y="212" width="20" height="9" rx="2" transform="rotate(16 94 216)"/>
+    <rect x="300" y="204" width="24" height="11" rx="2" transform="rotate(-34 312 209)"/>
+    <rect x="150" y="34" width="16" height="8" rx="2" transform="rotate(12 158 38)"/>
+  </g>
+  <g fill="#6a3fb8" opacity="0.55">
+    <rect x="118" y="88" width="14" height="7" rx="2" transform="rotate(-18 125 91)"/>
+    <rect x="272" y="128" width="13" height="6" rx="2" transform="rotate(24 278 131)"/>
+    <rect x="146" y="196" width="12" height="6" rx="2" transform="rotate(-12 152 199)"/>
+  </g>
+
+  <!-- 무너지는 고리 -->
+  <g fill="none" stroke="#7a4fd6" stroke-linecap="round">
+    <path d="M96 140 A108 84 0 0 1 312 140" stroke-width="1.2" opacity="0.28" stroke-dasharray="14 18"/>
+    <path d="M124 148 A80 62 0 0 0 288 136" stroke-width="1.8" opacity="0.4" stroke-dasharray="10 14"/>
+    <path d="M156 128 A50 40 0 0 1 254 146" stroke-width="2.4" opacity="0.55" stroke-dasharray="7 11"/>
+  </g>
+
+  <!-- 넘치는 스택 -->
+  <g font-family="monospace" font-size="6.5" fill="#8c6ac4" opacity="0.6">
+    <text x="196" y="112" text-anchor="middle">at loop (legacy.js:1)</text>
+    <text x="200" y="126" text-anchor="middle" opacity="0.8">at loop (legacy.js:1)</text>
+    <text x="204" y="140" text-anchor="middle" opacity="0.6">at loop (legacy.js:1)</text>
+    <text x="208" y="154" text-anchor="middle" opacity="0.4">at loop (legacy.js:1)</text>
+    <text x="212" y="168" text-anchor="middle" opacity="0.25">...</text>
+  </g>
+
+  <!-- 뽑혀 나온 break -->
+  <g transform="translate(70 226) rotate(-16)">
+    <rect x="-28" y="-10" width="56" height="20" rx="3" fill="#0d0d0f" stroke="#c9963c" stroke-width="1.6"/>
+    <text x="0" y="4" text-anchor="middle" font-family="monospace" font-size="10"
+          fill="#e8b45c">break;</text>
+  </g>
+
+  <!-- 물러선 개발자 -->
+  <g transform="translate(348 214)" fill="#232630" stroke="#3d414c" stroke-width="1.4">
+    <circle cx="0" cy="-20" r="9"/>
+    <path d="M-12 -6 L12 -6 L14 38 L-14 38 Z"/>
+  </g>
+</svg>

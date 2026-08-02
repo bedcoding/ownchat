@@ -1,4 +1,8 @@
+import { DEV_WORK } from '@/data/devquest';
 import { SAMPLE_WORK } from '@/data/sample';
+
+/** 번들로 따라오는 시연용 작품들. 관리자가 같은 id로 발행하면 발행본이 이긴다 */
+const BUNDLED_WORKS = [SAMPLE_WORK, DEV_WORK];
 import type { PlayState, Work } from './types';
 
 /**
@@ -44,7 +48,8 @@ export function savePublished(works: Work[]): void {
 export function loadPlayableWorks(): Work[] {
   const published = loadPublished();
   const overridden = new Set(published.map((w) => w.id));
-  return [...published, ...(overridden.has(SAMPLE_WORK.id) ? [] : [SAMPLE_WORK])];
+  const bundled = BUNDLED_WORKS.filter((w) => !overridden.has(w.id));
+  return [...published, ...bundled];
 }
 
 export function findWork(id: string): Work | undefined {

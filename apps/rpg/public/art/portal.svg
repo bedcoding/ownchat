@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <!-- 채용봇이 허공에 공고를 여는 장면. 빛나는 고리 + 흘러나오는 텍스트 줄. -->
+  <defs>
+    <radialGradient id="pg" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#0a1020"/>
+      <stop offset="70%" stop-color="#1a3a6a"/>
+      <stop offset="100%" stop-color="#0d0d0f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#15161a"/>
+      <stop offset="100%" stop-color="#0d0d0f"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="300" fill="#0d0d0f"/>
+  <rect y="215" width="400" height="85" fill="url(#floor)"/>
+
+  <!-- 포탈 -->
+  <g transform="translate(238 126)">
+    <circle r="86" fill="url(#pg)"/>
+    <circle r="62" fill="none" stroke="#4a9eff" stroke-width="2.5" opacity="0.85"/>
+    <circle r="70" fill="none" stroke="#4a9eff" stroke-width="1.2" opacity="0.45"/>
+    <circle r="78" fill="none" stroke="#7fc4ff" stroke-width="0.8" opacity="0.22"/>
+    <circle r="54" fill="#050912"/>
+    <!-- 공고 텍스트가 흘러나온다 -->
+    <g fill="#9fd0ff" font-family="monospace" font-size="7" opacity="0.75">
+      <text x="-38" y="-18">WANTED</text>
+      <text x="-38" y="-6">senior dev</text>
+      <text x="-38" y="6">legacy ok</text>
+      <text x="-38" y="18">urgent</text>
+    </g>
+  </g>
+
+  <!-- 바닥에 닿는 빛줄기 -->
+  <g stroke="#5aa8ff" stroke-width="1.4" opacity="0.5" fill="none">
+    <path d="M212 206 L204 246 L212 258"/>
+    <path d="M262 208 L272 244 L266 260"/>
+  </g>
+
+  <!-- 채용봇 실루엣 -->
+  <g transform="translate(92 150)" fill="#2a2c33" stroke="#4a4d57" stroke-width="1.4">
+    <rect x="-20" y="18" width="40" height="52" rx="6"/>
+    <rect x="-14" y="-8" width="28" height="26" rx="7"/>
+    <circle cx="-5" cy="4" r="2.6" fill="#c9963c" stroke="none"/>
+    <circle cx="5" cy="4" r="2.6" fill="#c9963c" stroke="none"/>
+    <!-- 손을 든 팔 -->
+    <path d="M18 26 L48 -4" stroke-width="5" stroke-linecap="round"/>
+    <path d="M-18 26 L-30 52" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>

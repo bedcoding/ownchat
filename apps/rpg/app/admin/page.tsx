@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { DEV_WORK } from '@/data/devquest';
 import { SAMPLE_WORK } from '@/data/sample';
 import { cloneWork, downloadWork, emptyEpisode, emptyWork, newId, parseWork } from '@/lib/authoring';
 import { validateEpisode } from '@/lib/engine';
@@ -100,15 +101,18 @@ export default function AdminPage() {
         </Link>
         <strong>저작 도구</strong>
         <span className="spacer" />
-        <button
-          className="mini"
-          onClick={() => {
-            setDraft(cloneWork(SAMPLE_WORK, `${SAMPLE_WORK.title} (사본)`));
-            setView({ kind: 'work' });
-          }}
-        >
-          샘플 복제
-        </button>
+        {[SAMPLE_WORK, DEV_WORK].map((sample) => (
+          <button
+            key={sample.id}
+            className="mini"
+            onClick={() => {
+              setDraft(cloneWork(sample, `${sample.title} (사본)`));
+              setView({ kind: 'work' });
+            }}
+          >
+            {sample.title} 복제
+          </button>
+        ))}
         <button className="mini" onClick={() => fileRef.current?.click()}>
           JSON 가져오기
         </button>
