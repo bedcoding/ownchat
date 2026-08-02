@@ -11,6 +11,11 @@ apps/desktop/dist/
 
 dist/
 *.tsbuildinfo
+
+# 실제 작품 자산은 커밋하지 않는다 — 저작권·사내 기획 노출.
+# 관리자 화면의 JSON 내보내기/가져오기로 로컬에서만 다룬다.
+apps/rpg/data/local/
+apps/rpg/public/uploads/
 .env
 .env.local
 .DS_Store

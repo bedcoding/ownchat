@@ -18,6 +18,8 @@
     "dev": "concurrently -n web,bridge -c cyan,yellow \"npm run dev -w @ownchat/web\" \"npm run start -w @ownchat/bridge\"",
     "dev:web": "npm run dev -w @ownchat/web",
     "build": "npm run build -w @ownchat/web",
+    "rpg": "npm run dev -w @ownchat/rpg",
+    "rpg:build": "npm run build -w @ownchat/rpg",
     "bridge": "npm run start -w @ownchat/bridge",
     "bridge:token": "npm run start -w @ownchat/bridge -- --print-token"
   },
