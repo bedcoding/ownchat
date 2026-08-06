@@ -2,8 +2,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveCli } from '@ownchat/core/claude-cli';
 import { loadConfig } from '../src/config.mjs';
-import { resolveCli } from '../src/claude-cli.mjs';
 import { createServer } from '../src/server.mjs';
 import { formatForDisplay, loadOrCreateToken } from '../src/token.mjs';
 
