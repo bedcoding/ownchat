@@ -7,21 +7,30 @@
  *    아래에 나온 기본 규칙이 이겨서 오버라이드가 조용히 무효가 된다.
  */
 
+/*
+ * 팔레트는 웹툰 서비스 앱의 관례를 따른다 — 뉴트럴 다크 배경에 채도 높은 마젠타 액센트,
+ * 본문은 산세리프. 이전의 따뜻한 흙색 + 명조체 조합은 문학적이지만 웹툰 앱과 결이 달랐다.
+ *
+ * 세리프는 엔딩 타이틀 한 곳에만 남긴다 — 회차를 닫는 장면에서만 질감이 필요하다.
+ */
 :root {
-  --bg: #0e0d0c;
-  --bg-soft: #161513;
-  --bg-raised: #1d1b18;
-  --border: #2e2b27;
-  --border-strong: #46413a;
-  --text: #ece7df;
-  --text-dim: #928b80;
-  --text-faint: #5d574f;
-  --accent: #d8763f;
-  --accent-soft: #2a1a11;
-  --locked: #4a453e;
-  --radius: 4px;
+  --bg: #0d0d10;
+  --bg-soft: #16161b;
+  --bg-raised: #1e1e25;
+  --border: #2a2a33;
+  --border-strong: #3d3d49;
+  --text: #f1f1f4;
+  --text-dim: #9a9aa6;
+  --text-faint: #61616d;
+  --accent: #f5316f;
+  --accent-soft: #2b0f1c;
+  --locked: #4a4a56;
+  --radius: 6px;
+  /** 카드·선택지처럼 손가락으로 누르는 큰 면 */
+  --radius-lg: 12px;
   --serif: "Nanum Myeongjo", "Apple SD Gothic Neo", "Malgun Gothic", Georgia, serif;
-  --sans: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --sans: Pretendard, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic",
+    "Segoe UI", sans-serif;
 }
 
 * {
@@ -88,7 +97,7 @@ a {
 }
 
 .topbar .title {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 14px;
   letter-spacing: 0.02em;
 }
@@ -158,7 +167,7 @@ a {
   font-size: 11px;
   text-align: center;
   padding: 10px;
-  font-family: var(--serif);
+  font-family: var(--sans);
   letter-spacing: 0.08em;
 }
 
@@ -177,17 +186,19 @@ a {
 }
 
 .speaker {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 13px;
   color: var(--accent);
   letter-spacing: 0.06em;
   margin-bottom: 8px;
 }
 
+/* 산세리프는 명조보다 자체가 크게 읽혀서 행간을 조금 줄인다 */
 .narration {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 15.5px;
-  line-height: 2;
+  line-height: 1.85;
+  letter-spacing: -0.005em;
   white-space: pre-wrap;
   margin: 0;
 }
@@ -214,10 +225,10 @@ a {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 13px 15px;
+  padding: 14px 16px;
   background: var(--bg-raised);
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   transition: border-color 120ms, background 120ms;
 }
 
@@ -243,6 +254,148 @@ a {
   margin-top: 4px;
   font-size: 11.5px;
   color: var(--text-faint);
+}
+
+/* 확률이 걸린 선택지 — 숫자는 데이터에서 만들므로 항상 실제 확률과 일치한다 */
+.choice .chance {
+  display: block;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--accent);
+}
+
+.choice:disabled .chance {
+  color: var(--locked);
+}
+
+/* 굴림 결과 — 도착한 장면 위에 한 줄. 운으로 갈렸다는 것을 알려준다 */
+.rolled {
+  margin: 0 20px 4px;
+  padding: 8px 12px;
+  border-left: 2px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.rolled-log {
+  color: var(--accent);
+}
+
+/* 작품 목록 배지 — 들어가기 전에 "AI 없이 되는가"를 알 수 있게 */
+.tagline {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 10.5px;
+  vertical-align: middle;
+  color: var(--text-faint);
+}
+
+.tagline.ai {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── 심문 (심문 노드가 있는 작품에서만 뜬다) ─────────────────── */
+
+.probe {
+  margin: 4px 16px 10px;
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.probe-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.probe-head .who {
+  font-family: var(--sans);
+  font-size: 15px;
+  color: var(--accent);
+}
+
+.probe-head .left {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.probe-intro {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.probe-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.probe-line p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+.probe-line.user p {
+  color: var(--text-dim);
+  padding-left: 10px;
+  border-left: 2px solid var(--border-strong);
+}
+
+.probe-line.assistant p {
+  font-family: var(--sans);
+}
+
+.probe-line.pending p {
+  color: var(--text-dim);
+}
+
+/* 해금은 엔진이 판정한다 — 모델에게 지급 권한이 없다는 것이 이 게임의 안전장치다 */
+.probe-gain {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.probe-error {
+  font-size: 12.5px;
+  color: #d77;
+}
+
+.probe-input {
+  display: flex;
+  gap: 8px;
+}
+
+.probe-input input {
+  flex: 1;
+  min-width: 0;
+}
+
+.probe-setup p {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.probe-setup code {
+  font-size: 11.5px;
+  color: var(--accent);
 }
 
 /* ── 하단 상태 바 ─────────────────────────────────────────── */
@@ -295,6 +448,7 @@ a {
   color: var(--text-faint);
 }
 
+/* 세리프를 남긴 유일한 자리 — 회차를 닫는 장면에서만 질감을 준다 */
 .ending h2 {
   font-family: var(--serif);
   font-size: 24px;
@@ -305,7 +459,7 @@ a {
 .ending p {
   color: var(--text-dim);
   margin: 0;
-  font-family: var(--serif);
+  font-family: var(--sans);
   line-height: 2;
 }
 
@@ -313,7 +467,7 @@ a {
   padding: 11px 20px;
   border: 1px solid var(--border-strong);
   background: var(--bg-raised);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   align-self: center;
 }
 
@@ -365,7 +519,7 @@ a {
   text-align: center;
   padding: 12px 6px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   background: var(--bg-soft);
 }
 
@@ -379,7 +533,7 @@ a {
 }
 
 .dex-card .name {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 13px;
 }
 
@@ -451,7 +605,7 @@ a {
 }
 
 .home h1 {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 26px;
   margin: 0 0 2px;
   letter-spacing: 0.04em;
@@ -464,26 +618,35 @@ a {
   line-height: 1.8;
 }
 
-.home .link-card {
+/*
+ * 진입 카드. 홈과 작품 목록이 같은 클래스를 쓴다 — `.home` 자손으로만 두면
+ * 작품 목록(button.link-card)에는 규칙이 걸리지 않아 버튼 기본 배경이 나온다.
+ * 손가락으로 누르는 큰 면이라 라운드를 키운다.
+ */
+.link-card {
   display: block;
+  width: 100%;
+  text-align: left;
   padding: 15px 16px;
+  margin-bottom: 10px;
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   text-decoration: none;
   color: var(--text);
   background: var(--bg-raised);
+  transition: border-color 120ms;
 }
 
-.home .link-card:hover {
+.link-card:hover {
   border-color: var(--accent);
 }
 
-.home .link-card .t {
-  font-family: var(--serif);
+.link-card .t {
+  font-family: var(--sans);
   font-size: 15px;
 }
 
-.home .link-card .d {
+.link-card .d {
   color: var(--text-dim);
   font-size: 12.5px;
   margin-top: 3px;
@@ -515,7 +678,7 @@ a {
 }
 
 .admin-bar strong {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-weight: 500;
   letter-spacing: 0.02em;
 }
@@ -873,7 +1036,7 @@ textarea {
   text-align: left;
   background: var(--bg-raised);
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 11px 13px;
 }
 
@@ -883,7 +1046,7 @@ textarea {
 
 .work-open .t {
   display: block;
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 14px;
 }
 
@@ -898,6 +1061,97 @@ textarea {
   font-size: 12.5px;
   color: var(--text-faint);
   margin: 6px 0;
+}
+
+/* ── 확률 분기 · 심문 노드 편집 ───────────────────────────── */
+
+/* 확률 분기는 선택지에 딸린 하위 항목이라 한 단 더 들여쓴다 */
+.outcome-edit {
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+}
+
+.probe-form {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+}
+
+/* 심문 노드는 오프라인 플레이를 깨뜨리므로 배지를 눈에 띄게 둔다 */
+.badge.warn {
+  border-color: #b45;
+  color: #d77;
+}
+
+/* ── AI 저작 패널 (관리자 전용) ───────────────────────────── */
+
+/* 실패는 붉게 — 오류 목록(.issues li.error)과 같은 색을 쓴다 */
+.notice.bad {
+  border-left-color: #b45;
+  background: #241514;
+  color: #d77;
+}
+
+.notice.bad strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.ai-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 760px;
+}
+
+.ai-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-progress {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* 모델이 처음 토큰을 뱉기까지 몇 초가 걸린다. 그 사이 화면이 멈춘 것처럼 보이지 않게 한다 */
+.ai-progress-bar {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  background-size: 40% 100%;
+  animation: ai-sweep 1.4s linear infinite;
+}
+
+@keyframes ai-sweep {
+  from {
+    background-position: -40% 0;
+  }
+  to {
+    background-position: 140% 0;
+  }
+}
+
+.ai-progress pre,
+.ai-raw {
+  margin: 0;
+  padding: 10px 12px;
+  max-height: 260px;
+  overflow: auto;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.ai-raw {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-top: 8px;
 }
 
 /* ── 반응형 (반드시 파일 맨 끝) ───────────────────────────── */
