@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { brand } from '@/lib/brand';
+import { requiresRuntimeAI } from '@/lib/engine';
 import { loadPlay, loadPlayableWorks, savePlay } from '@/lib/storage';
 import type { PlayState, Work } from '@/lib/types';
 import Runner from './Runner';
@@ -66,16 +67,25 @@ export default function PlayPage() {
         ) : (
           works.map((w) => {
             const resume = saved && saved.workId === w.id;
+            /*
+             * 작품 데이터가 정한다 — 심문 노드를 하나도 쓰지 않은 작품은 오프라인에서 돌고
+             * 아무 비용도 들지 않는다. 들어가기 전에 알 수 있어야 한다.
+             */
+            const needsAi = requiresRuntimeAI(w);
             return (
               <button
                 key={w.id}
                 className="link-card"
-                style={{ width: '100%', textAlign: 'left', marginBottom: 10 }}
                 onClick={() => {
                   setWorkId(w.id);
                 }}
               >
-                <div className="t">{brand(w.title)}</div>
+                <div className="t">
+                  {brand(w.title)}
+                  <span className={`tagline ${needsAi ? 'ai' : 'offline'}`}>
+                    {needsAi ? '심문 있음' : '오프라인'}
+                  </span>
+                </div>
                 <div className="d">
                   {w.episodes.length}화 수록 · 등장인물 {w.characters.length}명
                   {w.rating === 'adult' ? ' · 성인' : ''}

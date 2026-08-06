@@ -10,10 +10,11 @@ import {
   hasNextEpisode,
   initialState,
   lockedReason,
-  meetsRequirement,
+  outcomeHint,
   resolveEnding,
 } from '@/lib/engine';
-import type { Character, PlayState, StoryNode, Work } from '@/lib/types';
+import type { Character, Outcome, PlayState, StoryNode, Work } from '@/lib/types';
+import ProbePanel from './ProbePanel';
 
 type Tab = 'scene' | 'dex' | 'record';
 
@@ -27,7 +28,11 @@ interface Props {
 
 /**
  * 트리 러너 — 플레이어 런타임과 관리자 미리보기가 공유한다.
- * 네트워크 호출이 한 줄도 없다. 이 화면은 비행기 모드에서도 그대로 돈다.
+ *
+ * **심문 노드(`node.probe`)가 없는 작품에서는 네트워크 호출이 한 줄도 없다** — 그 작품은
+ * 비행기 모드에서 그대로 돈다. 심문 노드를 쓰는 작품만 그 노드에서 `ProbePanel` 이 모델을
+ * 부르고, 그때도 요청은 사용자 기기에서 직접 나간다(이 사이트의 서버는 끼지 않는다).
+ * 작품이 어느 쪽인지는 `requiresRuntimeAI()` 가 데이터에서 판정한다.
  */
 export default function Runner({ work: rawWork, persist, initial, onExit }: Props) {
   /*
@@ -57,6 +62,9 @@ export default function Runner({ work: rawWork, persist, initial, onExit }: Prop
 
   /** 이 화의 첫 노드인가 — recap 표시 여부 */
   const atEpisodeStart = episode?.entry === state.nodeId;
+
+  /** 직전 선택에서 굴린 결과 — 도착한 장면 위에 한 줄로 띄운다 */
+  const rolled: string | undefined = state.log[state.log.length - 1]?.outcome;
 
   const pick = useCallback(
     (index: number) => {
@@ -136,15 +144,19 @@ export default function Runner({ work: rawWork, persist, initial, onExit }: Prop
             <div className="scene">
               <SceneArt node={node} />
               {atEpisodeStart && episode.recap ? <div className="recap">{episode.recap}</div> : null}
+              {rolled ? <div className="rolled">{rolled}</div> : null}
               <div className="scene-body">
                 {node.speaker ? <div className="speaker">{node.speaker}</div> : null}
                 <p className="narration">{node.text}</p>
               </div>
             </div>
 
+            {node.probe ? <ProbePanel node={node} state={state} onState={setState} /> : null}
+
             <div className="choices">
               {node.choices.map((choice, i) => {
                 const locked = lockedReason(state, choice);
+                const chance = outcomeHint(choice);
                 return (
                   <button
                     key={`${choice.next}-${i}`}
@@ -153,6 +165,8 @@ export default function Runner({ work: rawWork, persist, initial, onExit }: Prop
                     onClick={() => pick(i)}
                   >
                     {choice.label}
+                    {/* 확률은 데이터에서 만든다 — 저작자가 라벨에 직접 쓰면 숫자를 고칠 때 어긋난다 */}
+                    {chance ? <span className="chance">{chance}</span> : null}
                     {locked ? <span className="lock">{locked}</span> : null}
                   </button>
                 );
@@ -277,6 +291,7 @@ function Record({ state }: { state: PlayState }) {
                 {entry.speaker ? <div className="who">{entry.speaker}</div> : null}
                 <div>{entry.text}</div>
                 {entry.choice ? <div className="picked">→ {entry.choice}</div> : null}
+                {entry.outcome ? <div className="picked rolled-log">{entry.outcome}</div> : null}
               </div>
             </div>
           );
