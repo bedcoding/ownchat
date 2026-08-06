@@ -1,7 +1,10 @@
 'use client';
 
 import { emptyChoice, formatList, parseList, prune } from '@/lib/authoring';
-import type { Choice, Episode, StoryNode, Work } from '@/lib/types';
+import { outcomeHint } from '@/lib/engine';
+import { emptyBrief, sealBrief } from '@/lib/seal';
+import type { Choice, Episode, Outcome, StoryNode, Work } from '@/lib/types';
+import ProbeForm from './ProbeForm';
 
 interface Props {
   work: Work;
@@ -26,6 +29,12 @@ export default function NodeForm({ work, episode, node, onChange, onDelete, isEn
   const setChoice = (i: number, patch: Partial<Choice>) => {
     const choices = node.choices.map((c, idx) => (idx === i ? { ...c, ...patch } : c));
     set({ choices });
+  };
+
+  const setOutcome = (ci: number, oi: number, patch: Partial<Outcome>) => {
+    const choice = node.choices[ci];
+    const outcomes = (choice.outcomes ?? []).map((o, idx) => (idx === oi ? { ...o, ...patch } : o));
+    setChoice(ci, { outcomes });
   };
 
   return (
@@ -260,8 +269,127 @@ export default function NodeForm({ work, episode, node, onChange, onDelete, isEn
                   onChange={(e) => setChoice(i, { lockedHint: e.target.value || undefined })}
                 />
               </div>
+
+              {/*
+                확률 분기. 확정 대가는 위의 "효과", 운에 달린 부분이 여기다.
+                "도망친다: 돈 -1 확정, 30% 확률로 추격당함" 같은 선택지가 둘을 함께 쓴다.
+              */}
+              <div className="row wrap sub">
+                <span className="tag">확률</span>
+                {(choice.outcomes ?? []).length === 0 ? (
+                  <>
+                    <button
+                      className="mini"
+                      onClick={() => setChoice(i, { outcomes: [{ chance: 30 }] })}
+                    >
+                      + 확률 분기
+                    </button>
+                    <span className="hint-line" style={{ margin: 0 }}>
+                      없으면 항상 같은 결과입니다
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="hint-line" style={{ margin: 0 }}>
+                      {outcomeHint(choice)}
+                    </span>
+                    <span className="spacer" />
+                    <button
+                      className="mini"
+                      onClick={() => setChoice(i, { outcomes: [...(choice.outcomes ?? []), { chance: 10 }] })}
+                    >
+                      + 분기
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {(choice.outcomes ?? []).map((outcome, oi) => (
+                <div className="row wrap sub outcome-edit" key={oi}>
+                  <label className="num">
+                    %
+                    <input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={outcome.chance}
+                      onChange={(e) => setOutcome(i, oi, { chance: Number(e.target.value) })}
+                    />
+                  </label>
+                  <input
+                    className="grow"
+                    placeholder="결과 문구 (주먹이 빗나갔다)"
+                    value={outcome.text ?? ''}
+                    onChange={(e) => setOutcome(i, oi, { text: e.target.value || undefined })}
+                  />
+                  {statNames.map((name) => (
+                    <label className="num" key={name}>
+                      {name}
+                      <input
+                        type="number"
+                        placeholder="±"
+                        value={outcome.effects?.stats?.[name] ?? ''}
+                        onChange={(e) => {
+                          const stats = { ...(outcome.effects?.stats ?? {}) };
+                          if (e.target.value === '') delete stats[name];
+                          else stats[name] = Number(e.target.value);
+                          setOutcome(i, oi, { effects: prune({ ...outcome.effects, stats: prune(stats) }) });
+                        }}
+                      />
+                    </label>
+                  ))}
+                  <select
+                    value={outcome.next ?? ''}
+                    onChange={(e) => setOutcome(i, oi, { next: e.target.value || undefined })}
+                  >
+                    <option value="">→ 기본 노드</option>
+                    {episode.nodes.map((n) => (
+                      <option key={n.id} value={n.id}>
+                        → {n.id}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="mini danger"
+                    onClick={() =>
+                      setChoice(i, {
+                        outcomes: (choice.outcomes ?? []).filter((_, idx) => idx !== oi),
+                      })
+                    }
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
           ))}
+        </div>
+      )}
+
+      {/*
+        심문 노드. 대부분의 작품은 쓰지 않으므로 접힌 상태로 둔다 —
+        이 노드를 하나라도 쓰면 작품이 "플레이 중 AI 필요"로 분류되고 오프라인 플레이가 깨진다.
+      */}
+      {node.ending ? null : node.probe ? (
+        <ProbeForm
+          work={work}
+          probe={node.probe}
+          onChange={(probe) => set({ probe })}
+          onRemove={() => set({ probe: undefined })}
+        />
+      ) : (
+        <div className="row sub" style={{ marginTop: 12 }}>
+          <button
+            className="mini"
+            onClick={() =>
+              set({ probe: { who: '', intro: '', sealed: sealBrief(emptyBrief()), maxTurns: 8 } })
+            }
+          >
+            심문 노드로 전환
+          </button>
+          <span className="hint-line" style={{ margin: 0 }}>
+            플레이어가 자유 질문을 하는 노드. 이 작품은 플레이 중 AI 가 필요해집니다
+          </span>
         </div>
       )}
     </div>
