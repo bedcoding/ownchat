@@ -4,7 +4,7 @@
 > 무엇이 남았고, 어디서 발을 헛디디게 되는지를 적는다.
 > 왜 이런 구조인지에 대한 근거는 [POLICY.md](POLICY.md)에 따로 있다.
 
-최종 갱신: 2026-08-02
+최종 갱신: 2026-08-06
 
 ## 한 줄 요약
 
@@ -163,6 +163,8 @@ npm run dev:web     # 터미널 2 — localhost:3000
 | 데스크톱 레이아웃 (1280px) | 브라우저 | 사이드바 상시 표시(260px), 햄버거 숨김 |
 | 폰 분기 UI | `isTouchOnlyDevice()` 를 일시적으로 `true` 로 강제 | 빈 화면·설정 모두 API 키 전용으로 바뀜. 브리지·npx·페어링 언급 0회, `127.0.0.1` 요청 0회 |
 | 폰 분기 오탐 방지 | 플래그 원복 후 375px 좁은 창 | 폰으로 분류되지 않음(`pointer: fine`), 구독 경로 정상 노출 |
+| **브리지 실행** (2026-08-06) | `npm run bridge` → `/health` | `claudeCli.found: true, loggedIn: true, authMethod: "claude.ai"`. 6장 7번 버그를 고친 뒤 |
+| **rpg 저작 파이프라인** (2026-08-06) | 브리지 경유로 설정 한 줄 → 트리 초안 | 235초 / 14노드 / 검증 오류 0 · 확률 분기 14건 자동 생성. 자세한 것은 [apps/rpg/docs/STATUS.md](../apps/rpg/docs/STATUS.md) 4장 |
 
 ### 검증하지 못한 것
 
@@ -344,3 +346,8 @@ npm run dev:web     # 터미널 2 — localhost:3000
 5. **`env: { ..., KEY: undefined }`** — 플랫폼에 따라 문자열 `"undefined"` 가 된다.
    `delete` 로 지워야 한다.
 6. **electron-builder가 자기 바이너리를 삭제** — 4장 9번.
+7. **브리지 진입점이 `core` 로 옮겨진 모듈을 상대 경로로 import** (2026-08-06 수정) —
+   `bin/ownchat-bridge.mjs` 가 `../src/claude-cli.mjs` 를 불렀는데 그 파일은 `packages/core` 에 있다.
+   `server.mjs` 는 `@ownchat/core/claude-cli` 로 올바르게 쓰고 있어서 눈에 안 띄었고, 결과적으로
+   **`npm run bridge` 가 아예 실행되지 않는 상태였다.** core 분리 리팩터링에서 bin 만 놓친 것.
+   → 회귀 방지: 브리지를 고친 뒤에는 `npm run bridge:token` 이 코드를 출력하는지 한 번 확인한다.
