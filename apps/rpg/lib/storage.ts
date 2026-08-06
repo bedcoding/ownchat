@@ -1,8 +1,15 @@
 import { DEV_WORK } from '@/data/devquest';
+import { MYSTERY_WORK } from '@/data/mystery';
 import { SAMPLE_WORK } from '@/data/sample';
+import { includesWork } from './profile';
 
-/** 번들로 따라오는 시연용 작품들. 관리자가 같은 id로 발행하면 발행본이 이긴다 */
-const BUNDLED_WORKS = [SAMPLE_WORK, DEV_WORK];
+/**
+ * 번들로 따라오는 작품들. 관리자가 같은 id로 발행하면 발행본이 이긴다.
+ *
+ * 배포 프로파일이 수록 목록을 좁힌다 — 단일 작품으로 스토어에 낼 때 같은 코드에서
+ * 그 작품만 실린 빌드가 나온다 (`lib/profile.ts`).
+ */
+const BUNDLED_WORKS = [SAMPLE_WORK, DEV_WORK, MYSTERY_WORK].filter((w) => includesWork(w.id));
 import type { PlayState, Work } from './types';
 
 /**
