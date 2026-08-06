@@ -20,10 +20,13 @@
     "build": "npm run build -w @ownchat/web",
     "rpg": "npm run dev -w @ownchat/rpg",
     "rpg:build": "npm run build -w @ownchat/rpg",
+    "rpg:build:admin": "npm run build:admin -w @ownchat/rpg",
+    "rpg:typecheck": "npm run typecheck -w @ownchat/rpg",
     "bridge": "npm run start -w @ownchat/bridge",
     "bridge:token": "npm run start -w @ownchat/bridge -- --print-token"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3"
   }
 }

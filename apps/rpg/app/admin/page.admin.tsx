@@ -3,15 +3,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { DEV_WORK } from '@/data/devquest';
+import { MYSTERY_WORK } from '@/data/mystery';
 import { SAMPLE_WORK } from '@/data/sample';
 import { cloneWork, downloadWork, emptyEpisode, emptyWork, newId, parseWork } from '@/lib/authoring';
 import { validateEpisode } from '@/lib/engine';
 import { loadPublished, savePublished } from '@/lib/storage';
 import type { Episode, Work } from '@/lib/types';
 import Runner from '../play/Runner';
+import AiPanel from './AiPanel';
 import EpisodeEditor from './EpisodeEditor';
 
-type View = { kind: 'list' } | { kind: 'work' } | { kind: 'episode'; id: string } | { kind: 'preview'; index: number };
+type View =
+  | { kind: 'list' }
+  | { kind: 'work' }
+  | { kind: 'episode'; id: string }
+  | { kind: 'preview'; index: number }
+  /** AI 초안 생성. 열려 있는 작품이 있으면 회차 추가, 없으면 새 작품 */
+  | { kind: 'ai' };
 
 export default function AdminPage() {
   const [hydrated, setHydrated] = useState(false);
@@ -52,6 +60,37 @@ export default function AdminPage() {
 
   if (!hydrated) return <div className="admin-wide" aria-busy="true" />;
 
+  // ── AI 초안 생성 ────────────────────────────────────────
+  if (view.kind === 'ai') {
+    return (
+      <div className="admin-wide">
+        <div className="admin-bar">
+          <button className="mini" onClick={() => setView(draft ? { kind: 'work' } : { kind: 'list' })}>
+            ← {draft ? '작품' : '목록'}
+          </button>
+          <strong>AI 저작</strong>
+        </div>
+        <div className="admin-body">
+          <AiPanel
+            work={draft}
+            onNewWork={(work) => {
+              setDraft(work);
+              setView({ kind: 'work' });
+              setNotice(`"${work.title}" 초안을 만들었습니다. 검수하고 발행하세요.`);
+            }}
+            onAddEpisode={(episode) => {
+              if (!draft) return;
+              setDraft({ ...draft, episodes: [...draft.episodes, episode] });
+              setView({ kind: 'work' });
+              setNotice(`${episode.index}화 초안을 추가했습니다. 검수하고 발행하세요.`);
+            }}
+            onClose={() => setView(draft ? { kind: 'work' } : { kind: 'list' })}
+          />
+        </div>
+      </div>
+    );
+  }
+
   // ── 미리보기 ────────────────────────────────────────────
   if (view.kind === 'preview' && draft) {
     // 미리보기는 저장하지 않는다 — 관리자가 눌러본 흔적이 플레이 기록에 남으면 안 된다
@@ -87,6 +126,7 @@ export default function AdminPage() {
         onOpenEpisode={(id) => setView({ kind: 'episode', id })}
         onPublish={() => publish(draft)}
         onPreview={(index) => setView({ kind: 'preview', index })}
+        onGenerate={() => setView({ kind: 'ai' })}
         notice={notice}
       />
     );
@@ -101,7 +141,7 @@ export default function AdminPage() {
         </Link>
         <strong>저작 도구</strong>
         <span className="spacer" />
-        {[SAMPLE_WORK, DEV_WORK].map((sample) => (
+        {[SAMPLE_WORK, DEV_WORK, MYSTERY_WORK].map((sample) => (
           <button
             key={sample.id}
             className="mini"
@@ -117,13 +157,22 @@ export default function AdminPage() {
           JSON 가져오기
         </button>
         <button
-          className="mini primary"
+          className="mini"
           onClick={() => {
             setDraft(emptyWork());
             setView({ kind: 'work' });
           }}
         >
-          + 새 작품
+          + 빈 작품
+        </button>
+        <button
+          className="mini primary"
+          onClick={() => {
+            setDraft(null);
+            setView({ kind: 'ai' });
+          }}
+        >
+          ✦ AI로 새 작품
         </button>
         <input
           ref={fileRef}
@@ -192,6 +241,7 @@ function WorkEditor({
   onOpenEpisode,
   onPublish,
   onPreview,
+  onGenerate,
   notice,
 }: {
   work: Work;
@@ -200,6 +250,7 @@ function WorkEditor({
   onOpenEpisode: (id: string) => void;
   onPublish: () => void;
   onPreview: (index: number) => void;
+  onGenerate: () => void;
   notice: string | null;
 }) {
   const totalIssues = work.episodes.reduce((sum, e) => sum + validateEpisode(e).filter((i) => i.level === 'error').length, 0);
@@ -339,7 +390,10 @@ function WorkEditor({
                 onChange({ ...work, episodes: [...work.episodes, emptyEpisode(work.episodes.length + 1)] })
               }
             >
-              + 추가
+              + 빈 회차
+            </button>
+            <button className="mini primary" onClick={onGenerate}>
+              ✦ AI로 다음 화
             </button>
           </h3>
           {work.episodes.map((ep: Episode) => {

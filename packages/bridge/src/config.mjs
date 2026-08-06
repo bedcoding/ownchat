@@ -11,7 +11,14 @@ export const DEFAULT_PORT = 4319;
  * 악성 페이지가 요청 자체는 보낼 수 있으므로 실제 방어선은 토큰(Authorization)이고,
  * 오리진 허용목록은 그 위에 얹는 두 번째 층이다.
  */
-const BUILTIN_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+const BUILTIN_ORIGINS = [
+  // ownchat 채팅 UI (apps/web)
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  // 선택지 게임의 관리자 저작 화면 (apps/rpg) — 트리 초안 생성이 이 브리지를 부른다
+  'http://localhost:3200',
+  'http://127.0.0.1:3200',
+];
 
 function usage() {
   return `
