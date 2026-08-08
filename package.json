@@ -22,8 +22,12 @@
     "build:hosted": "npm run build:hosted -w @ownchat/web",
     "start:hosted": "npm run start:hosted -w @ownchat/web",
     "rpg": "npm run dev -w @ownchat/rpg",
+    "rpg:hosted": "npm run dev:hosted -w @ownchat/rpg",
     "rpg:build": "npm run build -w @ownchat/rpg",
     "rpg:build:admin": "npm run build:admin -w @ownchat/rpg",
+    "rpg:build:hosted": "npm run build:hosted -w @ownchat/rpg",
+    "rpg:start:hosted": "npm run start:hosted -w @ownchat/rpg",
+    "rpg:db:migrate": "npm run db:migrate -w @ownchat/rpg",
     "rpg:typecheck": "npm run typecheck -w @ownchat/rpg",
     "bridge": "npm run start -w @ownchat/bridge",
     "bridge:token": "npm run start -w @ownchat/bridge -- --print-token"

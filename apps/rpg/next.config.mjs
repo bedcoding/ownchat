@@ -43,6 +43,7 @@ const NODE_SCHEME_RE = new RegExp(`^node:(${NODE_BUILTINS_UNUSED_IN_BROWSER.join
  */
 const PROFILE =
   process.env.RPG_PROFILE || (process.env.NODE_ENV === 'development' ? 'admin' : 'player');
+const HOSTED = PROFILE === 'hosted';
 
 /**
  * 관리자 화면을 **빌드에서 빼는** 방법.
@@ -52,17 +53,24 @@ const PROFILE =
  * 확장자로 인정한다. 사용자 빌드에서는 그 파일이 페이지로 인식되지 않으므로 `/admin`
  * 라우트가 생성되지 않고, 그 파일에서만 import 하는 편집기·AI 패널도 번들에 들어가지 않는다.
  */
-const pageExtensions = PROFILE === 'admin' ? ['admin.tsx', 'tsx', 'ts'] : ['tsx', 'ts'];
+const pageExtensions =
+  PROFILE === 'admin'
+    ? ['admin.tsx', 'tsx', 'ts']
+    : HOSTED
+      ? ['hosted.ts', 'hosted.tsx', 'tsx', 'ts']
+      : ['tsx', 'ts'];
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'export',
+  // Electron/admin keeps a static bundle. Only the public Vercel profile has server routes.
+  ...(HOSTED ? {} : { output: 'export' }),
   poweredByHeader: false,
   pageExtensions,
   env: {
     // 클라이언트 코드가 프로파일을 볼 수 있게 한다 (홈 화면의 링크, 수록 작품 필터)
     NEXT_PUBLIC_RPG_PROFILE: PROFILE,
+    NEXT_PUBLIC_RPG_HOSTED: HOSTED ? '1' : '0',
   },
   webpack: (config, { isServer, webpack }) => {
     if (!isServer) {

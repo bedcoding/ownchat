@@ -6,21 +6,29 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --webpack --port 3200",
+    "dev:hosted": "cross-env RPG_PROFILE=hosted next dev --webpack --port 3200",
     "build": "next build --webpack",
     "build:admin": "cross-env RPG_PROFILE=admin next build --webpack",
+    "build:hosted": "cross-env RPG_PROFILE=hosted next build --webpack",
     "typecheck": "tsc -p tsconfig.typecheck.json --noEmit",
-    "start": "next start --port 3200"
+    "start": "next start --port 3200",
+    "start:hosted": "cross-env RPG_PROFILE=hosted next start --port 3200",
+    "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
+    "dotenv": "^17.4.2",
     "next": "^16.3.0",
+    "pg": "^8.23.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/pg": "^8.21.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "cross-env": "^7.0.3",
     "typescript": "^5.7.0"
   }
 }

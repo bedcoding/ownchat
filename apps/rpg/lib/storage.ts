@@ -1,16 +1,6 @@
-import { DEV_WORK } from '@/data/devquest';
-import { MYSTERY_WORK } from '@/data/mystery';
-import { SAMPLE_WORK } from '@/data/sample';
-import { includesWork } from './profile';
-
-/**
- * 번들로 따라오는 작품들. 관리자가 같은 id로 발행하면 발행본이 이긴다.
- *
- * 배포 프로파일이 수록 목록을 좁힌다 — 단일 작품으로 스토어에 낼 때 같은 코드에서
- * 그 작품만 실린 빌드가 나온다 (`lib/profile.ts`).
- */
-const BUNDLED_WORKS = [SAMPLE_WORK, DEV_WORK, MYSTERY_WORK].filter((w) => includesWork(w.id));
 import type { PlayState, Work } from './types';
+import { BUNDLED_WORKS, mergeWorks } from './bundled';
+import { isHostedBuild } from './profile';
 
 /**
  * 저장은 전부 localStorage — 플레이어 런타임에 서버가 없다.
@@ -18,6 +8,7 @@ import type { PlayState, Work } from './types';
  */
 
 const WORKS_KEY = 'rpg.works.v1';
+const HOSTED_WORKS_CACHE_KEY = 'rpg.hosted-works-cache.v1';
 const PLAY_KEY = 'rpg.play.v1';
 
 function read<T>(key: string, fallback: T): T {
@@ -54,9 +45,52 @@ export function savePublished(works: Work[]): void {
  */
 export function loadPlayableWorks(): Work[] {
   const published = loadPublished();
-  const overridden = new Set(published.map((w) => w.id));
-  const bundled = BUNDLED_WORKS.filter((w) => !overridden.has(w.id));
-  return [...published, ...bundled];
+  return mergeWorks(published, BUNDLED_WORKS);
+}
+
+interface HostedWorksResponse {
+  works?: unknown;
+}
+
+function isWork(value: unknown): value is Work {
+  if (!value || typeof value !== 'object') return false;
+  const work = value as Partial<Work>;
+  return (
+    typeof work.id === 'string' &&
+    typeof work.title === 'string' &&
+    (work.rating === 'all' || work.rating === 'adult') &&
+    Boolean(work.stats && typeof work.stats === 'object') &&
+    Array.isArray(work.characters) &&
+    Array.isArray(work.episodes)
+  );
+}
+
+/**
+ * Public web load order: PostgreSQL API -> last good browser snapshot -> bundled works.
+ * Admin/static builds remain entirely local and never call a server route.
+ */
+export async function loadPlayableWorksForCurrentBuild(): Promise<Work[]> {
+  if (!isHostedBuild || typeof window === 'undefined') return loadPlayableWorks();
+
+  try {
+    const response = await fetch('/api/works', {
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) throw new Error(`works request failed (${response.status})`);
+
+    const payload = (await response.json()) as HostedWorksResponse;
+    const works = Array.isArray(payload.works) ? payload.works.filter(isWork) : [];
+    if (works.length > 0) {
+      write(HOSTED_WORKS_CACHE_KEY, works);
+      return works;
+    }
+  } catch {
+    // A public demo must still open when the remote database is unavailable.
+  }
+
+  const cached = read<unknown[]>(HOSTED_WORKS_CACHE_KEY, []).filter(isWork);
+  return cached.length > 0 ? cached : [...BUNDLED_WORKS];
 }
 
 export function findWork(id: string): Work | undefined {

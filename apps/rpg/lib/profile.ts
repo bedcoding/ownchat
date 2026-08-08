@@ -26,9 +26,10 @@
 export const PROFILE = process.env.NEXT_PUBLIC_RPG_PROFILE || 'admin';
 
 export const isAdminBuild = PROFILE === 'admin';
+export const isHostedBuild = PROFILE === 'hosted';
 
 /** 이 프로파일이 이 작품을 수록하는가 */
 export function includesWork(id: string): boolean {
-  if (PROFILE === 'admin' || PROFILE === 'player') return true;
+  if (PROFILE === 'admin' || PROFILE === 'player' || PROFILE === 'hosted') return true;
   return PROFILE === id;
 }

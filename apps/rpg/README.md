@@ -81,6 +81,34 @@ npm run rpg:build:admin    # 관리자용 — 저작 도구 포함 (Electron 포
 RPG_PROFILE=snowlodge npm run build -w @ownchat/rpg   # 그 작품만 수록
 ```
 
+### Vercel + PostgreSQL 프로파일
+
+같은 `apps/rpg`를 두 형태로 빌드한다.
+
+| 명령 | 결과 |
+|---|---|
+| `npm run rpg:build:admin` | Electron에 넣을 정적 관리자/미리보기 (`out/`) |
+| `npm run rpg:build:hosted` | Vercel용 Next.js 서버 + 공개 플레이어 |
+
+Vercel 프로젝트의 Root Directory는 `apps/rpg`로 둔다. `vercel.json`이 호스팅 빌드 명령을
+고정하므로 기본 정적 빌드가 실수로 배포되지 않는다.
+
+로컬에서는 `.env.local.example`을 `apps/rpg/.env.local`로 복사하고 실제 값은 그 파일에만
+넣는다. `DATABASE_URL`, `OPENAI_API_KEY`, `ADMIN_SYNC_SECRET`에는 절대 `NEXT_PUBLIC_` 접두사를
+붙이지 않는다.
+
+```bash
+npm run rpg:db:migrate    # DB 최초 1회 및 스키마 변경 후 실행
+npm run rpg:hosted        # localhost:3200 호스팅 프로파일
+```
+
+- `GET /api/health`: DB/OpenAI 환경 설정 상태 확인. 비밀값은 반환하지 않는다.
+- `GET /api/works`: PostgreSQL의 발행 작품을 읽는다.
+- 사용자 작품 로딩 폴백: PostgreSQL -> 브라우저 마지막 정상 스냅샷 -> 번들 작품.
+
+현재 DB API는 공개 읽기만 준비되어 있다. 관리자 발행 동기화는 `ADMIN_SYNC_SECRET` 인증을
+붙인 쓰기 API가 추가되기 전까지 계속 로컬 저장/JSON 내보내기를 사용한다.
+
 마지막 형태 덕분에 **장르가 다른 앱을 스토어에 따로 낼 수 있다** — 코드베이스를 쪼개지 않고
 수록 작품과 심문 사용 여부만 달라진다.
 

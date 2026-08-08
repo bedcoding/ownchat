@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { brand } from '@/lib/brand';
 import { requiresRuntimeAI } from '@/lib/engine';
-import { loadPlay, loadPlayableWorks, savePlay } from '@/lib/storage';
+import { loadPlay, loadPlayableWorksForCurrentBuild, savePlay } from '@/lib/storage';
 import type { PlayState, Work } from '@/lib/types';
 import Runner from './Runner';
 
@@ -16,13 +16,19 @@ export default function PlayPage() {
 
   // localStorage 는 서버 렌더에 없다. 마운트 후에 읽는다.
   useEffect(() => {
-    const list = loadPlayableWorks();
-    const play = loadPlay();
-    setWorks(list);
-    setSaved(play);
-    // 이어할 기록이 있고 그 작품이 아직 있으면 바로 이어서
-    if (play && list.some((w) => w.id === play.workId)) setWorkId(play.workId);
-    setHydrated(true);
+    let active = true;
+    void loadPlayableWorksForCurrentBuild().then((list) => {
+      if (!active) return;
+      const play = loadPlay();
+      setWorks(list);
+      setSaved(play);
+      // 이어할 기록이 있고 그 작품이 아직 있으면 바로 이어서
+      if (play && list.some((w) => w.id === play.workId)) setWorkId(play.workId);
+      setHydrated(true);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const persist = useCallback((state: PlayState | null) => {
