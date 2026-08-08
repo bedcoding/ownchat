@@ -1,6 +1,7 @@
-import { subscriptionPossible } from '../capabilities';
+import { hostedOpenAIAvailable, subscriptionPossible } from '../capabilities';
 import type { BridgeHealth, ProviderId, SendOptions, Settings, StreamEvent } from '../types';
 import { streamApiKey } from './apikey';
+import { streamOpenAI } from './openai';
 import { checkBridge, streamBridge } from './bridge';
 import { checkDesktop, desktopApi, isDesktop, streamDesktop } from './desktop';
 
@@ -11,7 +12,7 @@ export interface Resolution {
   provider: ProviderId | null;
   /** 왜 이 공급자를 골랐는지 / 왜 아무것도 못 고르는지 */
   reason: string;
-  blocking?: 'need_bridge' | 'need_token' | 'need_key' | 'need_login' | 'need_cli';
+  blocking?: 'need_bridge' | 'need_token' | 'need_key' | 'need_demo_token' | 'need_login' | 'need_cli';
 }
 
 /**
@@ -48,6 +49,21 @@ function localUsable(health: BridgeHealth | null): boolean {
 export function resolveProvider(settings: Settings, health: BridgeHealth | null): Resolution {
   const local = localProviderId();
   const desktop = local === 'desktop';
+  const hosted = hostedOpenAIAvailable();
+
+  if (settings.mode === 'openai' || (settings.mode === 'auto' && hosted)) {
+    if (!hosted) {
+      return { provider: null, reason: '이 빌드에는 OpenAI 데모 서버가 포함되어 있지 않습니다.', blocking: 'need_key' };
+    }
+    if (!settings.demoToken) {
+      return {
+        provider: null,
+        reason: '공모전 데모 접근 코드를 입력하세요.',
+        blocking: 'need_demo_token',
+      };
+    }
+    return { provider: 'openai', reason: 'OpenAI GPT-5.4 mini 데모 · 서버 키는 브라우저에 노출되지 않습니다.' };
+  }
 
   // 폰·태블릿에서는 구독 경로가 존재할 수 없다. 브리지를 띄우라는 안내를 하는 대신
   // 유일하게 가능한 경로(본인 API 키)로 곧장 안내한다.
@@ -114,6 +130,7 @@ export function send(provider: ProviderId, settings: Settings, opts: SendOptions
   if (provider === 'bridge') {
     return streamBridge({ ...opts, baseUrl: settings.bridgeUrl, token: settings.bridgeToken });
   }
+  if (provider === 'openai') return streamOpenAI({ ...opts, demoToken: settings.demoToken });
   return streamApiKey({ ...opts, apiKey: settings.apiKey });
 }
 

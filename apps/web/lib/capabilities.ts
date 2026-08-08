@@ -28,3 +28,8 @@ export function isTouchOnlyDevice(): boolean {
 export function subscriptionPossible(): boolean {
   return isDesktop() || !isTouchOnlyDevice();
 }
+
+/** 서버가 OpenAI 키를 보관하는 공모전용 호스팅 프로필인가. */
+export function hostedOpenAIAvailable(): boolean {
+  return process.env.NEXT_PUBLIC_OWNCHAT_HOSTED === '1';
+}

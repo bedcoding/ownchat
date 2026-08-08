@@ -2,12 +2,12 @@
 
 추론 비용이 **서비스가 아니라 사용자 쪽에서** 발생하는 AI 채팅.
 
-두 형태로 쓸 수 있고, 둘 다 **서비스 운영자의 AI 비용이 0**이다.
+기존 로컬 실행과 공모전용 OpenAI 호스팅 데모를 함께 지원한다.
 
 | | 데스크톱 앱 | 호스팅 웹 |
 |---|---|---|
 | 설치 | 인스톨러 | 없음 |
-| 비용 | **내 Claude 구독 요금 안에서** (추가 과금 없음) | 내 API 키로 사용량만큼 |
+| 비용 | **내 Claude 구독 요금 안에서** (추가 과금 없음) | 내 API 키 또는 서버의 OpenAI 데모 한도 |
 | Windows / macOS / Linux | ✅ | ✅ |
 | iPhone / Android | ❌ | ✅ |
 
@@ -49,7 +49,8 @@
 ```
 브라우저/렌더러 ──┬── IPC              → 내 PC의 Claude Code   (데스크톱 앱)
                   ├── 127.0.0.1:4319   → 내 PC의 Claude Code   (웹 + 로컬 브리지)
-                  └── api.anthropic.com                        (본인 API 키)
+                  ├── api.anthropic.com                        (본인 API 키)
+                  └── /api/openai/chat → api.openai.com        (공모전 호스팅 프로필)
 
   ownchat 서버 ── 정적 파일만 제공. 추론 경로에 없다.
 ```
@@ -90,6 +91,31 @@ npm run dev:web     # 터미널 2 — http://localhost:3000
 
 설정에 페어링 코드를 붙여넣으면 구독으로 동작한다. 브리지 없이 쓰려면 API 키만 넣으면 된다.
 
+### 공모전용 OpenAI 호스팅 데모
+
+`apps/web/.env.local.example`을 참고해 `apps/web/.env.local`에 다음 값을 넣는다.
+
+```env
+OWNCHAT_HOSTED=1
+OPENAI_API_KEY=sk-...
+OWNCHAT_DEMO_TOKEN=관람자에게-공유할-별도-접근-코드
+OPENAI_MODEL=gpt-5.4-mini
+```
+
+```bash
+npm run dev:hosted       # 개발
+npm run build:hosted     # 배포 빌드
+npm run start:hosted     # 빌드 실행
+```
+
+`OPENAI_API_KEY`는 서버에서만 읽으며 브라우저 번들·localStorage로 내려가지 않는다. 관람자는 API 키 대신
+`OWNCHAT_DEMO_TOKEN` 값만 입력한다. 기본 모델은 일일 무료 토큰 대상인 `gpt-5.4-mini`다. IP당 10분 30회,
+출력 2,048토큰, 서버 프로세스 기준 일일 추정 200만 토큰으로 제한한다(`OWNCHAT_RATE_LIMIT`,
+`OWNCHAT_DAILY_TOKEN_BUDGET`으로 조정 가능).
+
+프로세스 재시작이나 서버리스 다중 인스턴스에서는 일일 카운터가 초기화될 수 있다. 따라서 OpenAI 프로젝트에도
+별도의 사용 예산/알림을 설정해야 한다. 무료 한도를 넘는 사용량은 계정의 표준 요금으로 과금될 수 있다.
+
 ---
 
 ## 명령
@@ -102,6 +128,9 @@ npm run dev:web     # 터미널 2 — http://localhost:3000
 | `npm run desktop:dist` | 설치 파일까지 빌드 |
 | `npm run dev:web` | 웹 UI 개발 서버 |
 | `npm run build` | 웹 UI 정적 빌드 (`apps/web/out` — 렌더러 겸 배포물) |
+| `npm run dev:hosted` | OpenAI 서버 라우트를 포함한 공모전 데모 개발 서버 |
+| `npm run build:hosted` | OpenAI 서버 라우트를 포함한 배포 빌드 |
+| `npm run start:hosted` | 공모전 데모 빌드 실행 |
 | `npm run rpg` | 선택지 게임 개발 서버 (`localhost:3200`) |
 | `npm run rpg:build` | 선택지 게임 정적 빌드 — **사용자용** (관리자 화면 없음) |
 | `npm run rpg:build:admin` | 저작 도구가 포함된 빌드 |

@@ -49,6 +49,8 @@ const login = new LoginFlow();
 /** 진행 중인 대화 턴: requestId → abort 함수 */
 const inFlight = new Map();
 const busySessions = new Set();
+/** CLI 탐색 중인 요청도 동시성 한도에 포함한다. */
+const reservedRuns = new Set();
 
 let workspaceDir = null;
 
@@ -274,7 +276,7 @@ function registerIpc() {
     const sessionId = isValidSessionId(rawSessionId) ? rawSessionId : null;
     const model = isAllowedModel(requestedModel) ? requestedModel : DEFAULT_MODEL;
 
-    if (inFlight.size >= MAX_CONCURRENT_RUNS) {
+    if (reservedRuns.size >= MAX_CONCURRENT_RUNS) {
       send({ type: 'error', message: '동시에 처리할 수 있는 대화 수를 넘었습니다.' });
       return { ok: false };
     }
@@ -283,20 +285,22 @@ function registerIpc() {
       return { ok: false };
     }
 
-    const cli = await resolveCli(process.env.CLAUDE_CLI_CMD || null);
-    if (!cli) {
-      send({
-        type: 'error',
-        message: 'Claude Code를 찾지 못했습니다.',
-        hint: '`npm install -g @anthropic-ai/claude-code` 로 설치하세요.',
-      });
-      return { ok: false };
-    }
-
+    // CLI 탐색 await 전에 예약해야 동시에 들어온 요청이 한도와 세션 잠금을 함께 통과하지 않는다.
+    reservedRuns.add(id);
     if (sessionId) busySessions.add(sessionId);
     let aborted = false;
 
     try {
+      const cli = await resolveCli(process.env.CLAUDE_CLI_CMD || null);
+      if (!cli) {
+        send({
+          type: 'error',
+          message: 'Claude Code를 찾지 못했습니다.',
+          hint: '`npm install -g @anthropic-ai/claude-code` 로 설치하세요.',
+        });
+        return { ok: false };
+      }
+
       const result = await runTurn(
         {
           cmd: cli.cmd,
@@ -345,6 +349,7 @@ function registerIpc() {
       return { ok: false };
     } finally {
       inFlight.delete(id);
+      reservedRuns.delete(id);
       if (sessionId) busySessions.delete(sessionId);
     }
   });

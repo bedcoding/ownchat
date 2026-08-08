@@ -4,9 +4,9 @@ import type { ModelId } from './models';
  * `desktop` 과 `bridge` 는 둘 다 "내 PC의 Claude Code를 구독 요금으로 쓴다"는 같은 경로다.
  * 다른 것은 전송 방식뿐이다 — 데스크톱 앱은 IPC, 호스팅 웹은 로컬 HTTP 브리지.
  */
-export type ProviderId = 'desktop' | 'bridge' | 'apikey';
+export type ProviderId = 'desktop' | 'bridge' | 'apikey' | 'openai';
 /** 사용자가 고르는 값. 'local' 은 실행 환경에 따라 desktop 또는 bridge로 풀린다 */
-export type ProviderMode = 'auto' | 'local' | 'apikey';
+export type ProviderMode = 'auto' | 'local' | 'apikey' | 'openai';
 
 export interface ChatError {
   message: string;
@@ -35,6 +35,11 @@ export interface Conversation {
   messages: Message[];
   /** 브리지 모드에서 Claude Code 세션을 잇는 id. 모드가 바뀌면 무의미해진다 */
   bridgeSessionId: string | null;
+  /** 세션을 만든 전송 경로와 모델. 다른 경로의 세션을 잘못 재개하지 않게 한다. */
+  bridgeSessionProvider?: 'desktop' | 'bridge' | null;
+  bridgeSessionModel?: ModelId | null;
+  /** 공급자를 바꾼 대화는 새 대화로 분리해 보이지 않는 문맥 손실을 막는다. */
+  contextProvider?: ProviderId | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -44,6 +49,8 @@ export interface Settings {
   bridgeUrl: string;
   bridgeToken: string;
   apiKey: string;
+  /** 공개 데모 서버에 접속할 때 쓰는 코드. OpenAI API 키와는 별개다. */
+  demoToken: string;
   model: ModelId;
   showThinking: boolean;
 }
@@ -79,7 +86,13 @@ export type StreamEvent =
   | { type: 'delta'; text: string }
   | { type: 'thinking'; text: string }
   | { type: 'notice'; message: string }
-  | { type: 'done'; sessionId?: string | null; raw?: unknown[]; costUsd?: number | null }
+  | {
+      type: 'done';
+      sessionId?: string | null;
+      raw?: unknown[];
+      costUsd?: number | null;
+      usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number };
+    }
   | { type: 'error'; message: string; hint?: string | null };
 
 export interface SendOptions {

@@ -1,4 +1,4 @@
-export const MODELS = [
+export const CLAUDE_MODELS = [
   {
     id: 'claude-opus-5',
     label: 'Opus 5',
@@ -30,10 +30,47 @@ export const MODELS = [
   },
 ] as const;
 
-export type ModelId = (typeof MODELS)[number]['id'];
+export const OPENAI_MODELS = [
+  {
+    id: 'gpt-5.4-mini',
+    label: 'GPT-5.4 mini',
+    note: '공모전 데모 기본값 · 무료 일일 토큰 대상',
+  },
+  {
+    id: 'gpt-5.4-nano',
+    label: 'GPT-5.4 nano',
+    note: '더 빠르고 가벼운 질문용 · 무료 일일 토큰 대상',
+  },
+] as const;
 
-export const DEFAULT_MODEL: ModelId = 'claude-opus-5';
+export const MODELS = [...CLAUDE_MODELS, ...OPENAI_MODELS] as const;
+
+export type ClaudeModelId = (typeof CLAUDE_MODELS)[number]['id'];
+export type OpenAIModelId = (typeof OPENAI_MODELS)[number]['id'];
+export type ModelId = ClaudeModelId | OpenAIModelId;
+
+export const DEFAULT_CLAUDE_MODEL: ClaudeModelId = 'claude-opus-5';
+export const DEFAULT_OPENAI_MODEL: OpenAIModelId = 'gpt-5.4-mini';
+export const DEFAULT_MODEL: ModelId =
+  process.env.NEXT_PUBLIC_OWNCHAT_HOSTED === '1' ? DEFAULT_OPENAI_MODEL : DEFAULT_CLAUDE_MODEL;
 
 export function modelInfo(id: string) {
-  return MODELS.find((m) => m.id === id) ?? MODELS[0];
+  return CLAUDE_MODELS.find((m) => m.id === id) ?? CLAUDE_MODELS[0];
+}
+
+export function isOpenAIModel(id: string): id is OpenAIModelId {
+  return OPENAI_MODELS.some((model) => model.id === id);
+}
+
+export function isClaudeModel(id: string): id is ClaudeModelId {
+  return CLAUDE_MODELS.some((model) => model.id === id);
+}
+
+export function modelsForProvider(provider: 'openai' | 'claude') {
+  return provider === 'openai' ? OPENAI_MODELS : CLAUDE_MODELS;
+}
+
+export function normalizeModel(provider: 'openai' | 'claude', model: ModelId): ModelId {
+  if (provider === 'openai') return isOpenAIModel(model) ? model : DEFAULT_OPENAI_MODEL;
+  return isClaudeModel(model) ? model : DEFAULT_CLAUDE_MODEL;
 }

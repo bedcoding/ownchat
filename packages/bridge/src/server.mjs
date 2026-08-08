@@ -149,29 +149,12 @@ export function createServer({ config, token, version }) {
       return;
     }
 
-    const cli = await resolveCli(config.cliCmd);
-    if (!cli) {
-      sendJson(
-        res,
-        503,
-        {
-          error: 'cli_not_found',
-          message: 'Claude Code를 찾지 못했습니다.',
-          hint: '`npm install -g @anthropic-ai/claude-code` 로 설치한 뒤 `claude` 를 한 번 실행해 로그인하세요. 설치했는데도 안 잡히면 브리지를 `--cli <전체경로>` 로 실행하세요.',
-        },
-        cors,
-      );
-      return;
-    }
-
+    // 슬롯과 세션은 첫 await 전에 예약한다. 그렇지 않으면 동시에 들어온 요청 둘이
+    // 같은 running/busySessions 값을 보고 모두 통과할 수 있다.
     running += 1;
     if (sessionId) busySessions.add(sessionId);
 
-    openSse(res, cors);
-    const heartbeat = setInterval(() => {
-      if (!res.writableEnded) res.write(': keep-alive\n\n');
-    }, 15_000);
-
+    let heartbeat = null;
     let abort = null;
     let clientGone = false;
     res.on('close', () => {
@@ -180,6 +163,26 @@ export function createServer({ config, token, version }) {
     });
 
     try {
+      const cli = await resolveCli(config.cliCmd);
+      if (!cli) {
+        sendJson(
+          res,
+          503,
+          {
+            error: 'cli_not_found',
+            message: 'Claude Code를 찾지 못했습니다.',
+            hint: '`npm install -g @anthropic-ai/claude-code` 로 설치한 뒤 `claude` 를 한 번 실행해 로그인하세요. 설치했는데도 안 잡히면 브리지를 `--cli <전체경로>` 로 실행하세요.',
+          },
+          cors,
+        );
+        return;
+      }
+
+      openSse(res, cors);
+      heartbeat = setInterval(() => {
+        if (!res.writableEnded) res.write(': keep-alive\n\n');
+      }, 15_000);
+
       const result = await runTurn(
         {
           cmd: cli.cmd,
@@ -221,9 +224,12 @@ export function createServer({ config, token, version }) {
         });
       }
     } catch (e) {
-      if (!clientGone) sse(res, 'error', explainFailure(e.raw || e.message));
+      if (!clientGone) {
+        if (res.headersSent) sse(res, 'error', explainFailure(e.raw || e.message));
+        else sendJson(res, e.status || 500, { error: 'internal', ...explainFailure(e.raw || e.message) }, cors);
+      }
     } finally {
-      clearInterval(heartbeat);
+      if (heartbeat) clearInterval(heartbeat);
       running -= 1;
       if (sessionId) busySessions.delete(sessionId);
       if (!res.writableEnded) res.end();

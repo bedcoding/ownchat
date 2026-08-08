@@ -1,6 +1,6 @@
 'use client';
 
-import { subscriptionPossible } from '@/lib/capabilities';
+import { hostedOpenAIAvailable, subscriptionPossible } from '@/lib/capabilities';
 import type { Resolution } from '@/lib/providers';
 import type { BridgeHealth, Settings } from '@/lib/types';
 import LoginButton from './LoginButton';
@@ -19,11 +19,28 @@ export default function EmptyState({ resolution, health, settings, onOpenSetting
       <div className="empty">
         <h1>무엇이든 물어보세요</h1>
         <p>{resolution.reason}</p>
-        {resolution.provider !== 'apikey' && health ? (
+        {(resolution.provider === 'desktop' || resolution.provider === 'bridge') && health ? (
           <p className="brand-sub">
             Claude Code {health.claudeCli.version} · 웹 도구 {health.webTools ? '켜짐' : '꺼짐'}
           </p>
         ) : null}
+      </div>
+    );
+  }
+
+  if (resolution.blocking === 'need_demo_token') {
+    return (
+      <div className="empty">
+        <h1>데모 접근 코드를 입력하세요</h1>
+        <p>OpenAI API 키는 서버에 안전하게 보관되어 있습니다. 안내받은 접근 코드만 입력하면 됩니다.</p>
+        <p style={{ marginTop: 16 }}>
+          <button type="button" className="btn primary" onClick={onOpenSettings}>
+            접근 코드 입력
+          </button>
+        </p>
+        <p className="brand-sub" style={{ marginTop: 20 }}>
+          요청 내용은 OpenAI API로 전달됩니다. 이 데모는 실제 고객 서비스가 아닌 공모전 시연용입니다.
+        </p>
       </div>
     );
   }
@@ -50,7 +67,7 @@ export default function EmptyState({ resolution, health, settings, onOpenSetting
 
   // 폰·태블릿: 구독 경로가 존재할 수 없다. 실행할 수 없는 안내를 늘어놓지 않고
   // 가능한 하나로 곧장 안내한다.
-  if (!subscriptionPossible()) {
+  if (!subscriptionPossible() && !hostedOpenAIAvailable()) {
     return (
       <div className="empty">
         <h1>API 키를 넣으면 바로 쓸 수 있습니다</h1>

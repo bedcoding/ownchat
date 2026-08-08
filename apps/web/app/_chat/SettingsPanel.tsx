@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { subscriptionPossible } from '@/lib/capabilities';
-import { MODELS, type ModelId } from '@/lib/models';
+import { hostedOpenAIAvailable, subscriptionPossible } from '@/lib/capabilities';
+import { modelsForProvider, normalizeModel, type ModelId } from '@/lib/models';
 import { isDesktop } from '@/lib/providers';
 import type { BridgeHealth, ProviderMode, Settings } from '@/lib/types';
 import LoginButton from './LoginButton';
@@ -30,16 +30,28 @@ export default function SettingsPanel({
   const desktop = isDesktop();
   // 폰·태블릿에서는 구독 경로가 존재할 수 없다. 고를 수 없는 선택지를 보여주지 않는다.
   const canUseSubscription = subscriptionPossible();
+  const hosted = hostedOpenAIAvailable();
 
-  const modes: { id: ProviderMode; label: string }[] = canUseSubscription
-    ? [
-        { id: 'auto', label: '자동' },
-        { id: 'local', label: desktop ? '구독 (추가 비용 없음)' : '구독 (브리지)' },
-        { id: 'apikey', label: 'API 키' },
-      ]
-    : [{ id: 'apikey', label: 'API 키' }];
+  const modes: { id: ProviderMode; label: string }[] = [
+    ...(hosted ? [{ id: 'openai' as const, label: 'OpenAI 데모' }] : []),
+    ...(!hosted && canUseSubscription ? [{ id: 'auto' as const, label: '자동' }] : []),
+    ...(canUseSubscription
+      ? [{ id: 'local' as const, label: desktop ? 'Claude 구독' : 'Claude 구독 (브리지)' }]
+      : []),
+    { id: 'apikey', label: 'Anthropic API 키' },
+  ];
+
+  const draftModelProvider = draft.mode === 'openai' || (draft.mode === 'auto' && hosted) ? 'openai' : 'claude';
+  const draftModels = modelsForProvider(draftModelProvider);
+  const showLocalSettings = draft.mode === 'local' || (!hosted && draft.mode === 'auto');
 
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => setDraft((d) => ({ ...d, [key]: value }));
+  const setMode = (mode: ProviderMode) =>
+    setDraft((current) => ({
+      ...current,
+      mode,
+      model: normalizeModel(mode === 'openai' ? 'openai' : 'claude', current.model),
+    }));
 
   const recheck = async () => {
     setChecking(true);
@@ -62,7 +74,9 @@ export default function SettingsPanel({
       <div className="panel">
         <h2>설정</h2>
         <p className="panel-sub">
-          입력한 값은 이 {desktop ? '기기' : '브라우저'}에만 저장됩니다. 서버로 전송되는 경로는 없습니다.
+          {hosted
+            ? 'OpenAI API 키는 서버 환경변수에만 있고 브라우저에는 전달되지 않습니다.'
+            : `입력한 값은 이 ${desktop ? '기기' : '브라우저'}에만 저장됩니다.`}
         </p>
 
         <div className="field">
@@ -74,21 +88,39 @@ export default function SettingsPanel({
                   type="radio"
                   name="mode"
                   // 폰에서 선택지가 하나뿐이면 저장된 값이 뭐든 그것으로 동작한다
-                  checked={modes.length === 1 || draft.mode === mode.id}
-                  onChange={() => set('mode', mode.id)}
+                  checked={modes.length === 1 || draft.mode === mode.id || (hosted && draft.mode === 'auto' && mode.id === 'openai')}
+                  onChange={() => setMode(mode.id)}
                 />
                 {mode.label}
               </label>
             ))}
           </div>
           <span className="desc">
-            {!canUseSubscription
-              ? '이 기기에서는 API 키로만 쓸 수 있습니다. 구독 요금으로 쓰려면 PC에서 데스크톱 앱을 쓰세요.'
-              : `자동: ${desktop ? 'Claude Code를 쓸 수 있으면' : '브리지가 켜져 있으면'} 구독으로, 아니면 API 키로 보냅니다.`}
+            {hosted
+              ? '공개 데모는 서버의 OpenAI 키를 사용합니다. 접근 코드는 API 키가 아닙니다.'
+              : !canUseSubscription
+                ? '이 기기에서는 API 키로만 쓸 수 있습니다.'
+                : 'Claude 구독 또는 본인 API 키 경로를 고를 수 있습니다.'}
           </span>
         </div>
 
-        {desktop || !canUseSubscription ? null : (
+        {hosted ? (
+          <div className="field">
+            <label htmlFor="demoToken">데모 접근 코드</label>
+            <input
+              id="demoToken"
+              type="password"
+              value={draft.demoToken}
+              onChange={(e) => set('demoToken', e.target.value.trim())}
+              placeholder="공모전 안내에 적힌 코드"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <span className="desc">브라우저에 저장되며 이 데모 서버의 요청 승인에만 사용됩니다.</span>
+          </div>
+        ) : null}
+
+        {!showLocalSettings || desktop || !canUseSubscription ? null : (
           <div className="field">
             <label htmlFor="bridgeUrl">브리지 주소</label>
             <input
@@ -105,7 +137,7 @@ export default function SettingsPanel({
         )}
 
         {/* 구독 경로가 불가능한 기기에서는 Claude Code 상태를 보여줄 이유가 없다 */}
-        {!canUseSubscription ? null : (
+        {!showLocalSettings || !canUseSubscription ? null : (
         <p className="status-line">
           {!health
             ? desktop
@@ -124,7 +156,7 @@ export default function SettingsPanel({
         </p>
         )}
 
-        {health?.claudeCli.found && health.claudeCli.loggedIn === false ? (
+        {showLocalSettings && health?.claudeCli.found && health.claudeCli.loggedIn === false ? (
           <div className="field">
             <label>Claude 로그인</label>
             <div>
@@ -141,7 +173,7 @@ export default function SettingsPanel({
           </div>
         ) : null}
 
-        {desktop || !canUseSubscription ? null : (
+        {!showLocalSettings || desktop || !canUseSubscription ? null : (
           <div className="field">
             <label htmlFor="bridgeToken">페어링 코드</label>
             <input
@@ -157,7 +189,7 @@ export default function SettingsPanel({
           </div>
         )}
 
-        <div className="field">
+        {draft.mode === 'apikey' || (!hosted && draft.mode === 'auto') ? <div className="field">
           {/* 구독 경로가 없는 기기에서는 선택이 아니라 유일한 방법이다 */}
           <label htmlFor="apiKey">Anthropic API 키{canUseSubscription ? ' (선택)' : ''}</label>
           <input
@@ -173,12 +205,12 @@ export default function SettingsPanel({
             구독 경로를 못 쓸 때의 대안입니다. console.anthropic.com에서 발급하며, 사용한 토큰만큼 본인에게
             청구됩니다.
           </span>
-        </div>
+        </div> : null}
 
         <div className="field">
           <label htmlFor="model">기본 모델</label>
           <select id="model" value={draft.model} onChange={(e) => set('model', e.target.value as ModelId)}>
-            {MODELS.map((m) => (
+            {draftModels.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.label} — {m.note}
               </option>

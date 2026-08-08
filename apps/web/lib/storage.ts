@@ -17,6 +17,7 @@ export const DEFAULT_SETTINGS: Settings = {
   bridgeUrl: 'http://127.0.0.1:4319',
   bridgeToken: '',
   apiKey: '',
+  demoToken: '',
   model: DEFAULT_MODEL,
   showThinking: false,
 };
@@ -45,7 +46,7 @@ export function loadSettings(): Settings {
   const loaded = read<Settings>(SETTINGS_KEY, DEFAULT_SETTINGS);
   // 이전 버전은 구독 경로를 'bridge'로 저장했다. 이제 실행 환경에 따라 풀리는 'local'이다.
   const mode = (loaded.mode as string) === 'bridge' ? 'local' : loaded.mode;
-  return { ...loaded, mode };
+  return { ...loaded, mode, demoToken: loaded.demoToken ?? '' };
 }
 
 export function saveSettings(settings: Settings): void {
@@ -58,7 +59,11 @@ export function loadConversations(): Conversation[] {
     const raw = window.localStorage.getItem(CONVERSATIONS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as Conversation[]) : [];
+    return Array.isArray(parsed)
+      ? (parsed as Conversation[]).filter((conversation) =>
+          conversation && typeof conversation.id === 'string' && Array.isArray(conversation.messages),
+        )
+      : [];
   } catch {
     return [];
   }

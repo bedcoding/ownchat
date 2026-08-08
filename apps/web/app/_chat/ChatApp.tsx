@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DEFAULT_MODEL, type ModelId, MODELS } from '@/lib/models';
+import { hostedOpenAIAvailable } from '@/lib/capabilities';
+import { modelsForProvider, normalizeModel, type ModelId } from '@/lib/models';
 import { checkLocal, isDesktop, resolveProvider, send } from '@/lib/providers';
 import { DEFAULT_SETTINGS, loadConversations, loadSettings, newId, saveConversations, saveSettings } from '@/lib/storage';
 import type { BridgeHealth, Conversation, Message, Settings } from '@/lib/types';
@@ -31,6 +32,9 @@ function emptyConversation(model: ModelId): Conversation {
     model,
     messages: [],
     bridgeSessionId: null,
+    bridgeSessionProvider: null,
+    bridgeSessionModel: null,
+    contextProvider: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -76,7 +80,11 @@ export default function ChatApp() {
 
   useEffect(() => {
     if (!hydrated) return;
-    if (settings.mode === 'apikey') {
+    if (
+      settings.mode === 'apikey' ||
+      settings.mode === 'openai' ||
+      (settings.mode === 'auto' && hostedOpenAIAvailable())
+    ) {
       setHealth(null);
       return;
     }
@@ -105,6 +113,13 @@ export default function ChatApp() {
     () => conversations.find((c) => c.id === activeId) ?? null,
     [conversations, activeId],
   );
+  const openAISelected =
+    resolution.provider === 'openai' ||
+    settings.mode === 'openai' ||
+    (settings.mode === 'auto' && hostedOpenAIAvailable());
+  const modelProvider = openAISelected ? 'openai' : 'claude';
+  const selectedModel = normalizeModel(modelProvider, active?.model ?? settings.model);
+  const availableModels = modelsForProvider(modelProvider);
 
   // ── 대화 조작 ───────────────────────────────────────────────────────────────
   const patchConversation = useCallback((id: string, patch: (c: Conversation) => Conversation) => {
@@ -112,10 +127,10 @@ export default function ChatApp() {
   }, []);
 
   const startNew = useCallback(() => {
-    const conv = emptyConversation(settings.model);
+    const conv = emptyConversation(normalizeModel(openAISelected ? 'openai' : 'claude', settings.model));
     setConversations((prev) => [conv, ...prev]);
     setActiveId(conv.id);
-  }, [settings.model]);
+  }, [openAISelected, settings.model]);
 
   const removeConversation = useCallback((id: string) => {
     setConversations((prev) => {
@@ -134,8 +149,12 @@ export default function ChatApp() {
     async (text: string) => {
       if (!resolution.provider || sending) return;
 
-      const conv = active ?? emptyConversation(settings.model);
-      if (!active) {
+      const provider = resolution.provider;
+      const model = normalizeModel(provider === 'openai' ? 'openai' : 'claude', active?.model ?? settings.model);
+      // 공급자를 바꾸면 이전 공급자의 보이지 않는 문맥을 잃는다. 같은 화면에서 이어지는 척하지 않고 새 대화로 분리한다.
+      const providerChanged = Boolean(active?.contextProvider && active.contextProvider !== provider);
+      const conv = !active || providerChanged ? emptyConversation(model) : active;
+      if (!active || providerChanged) {
         setConversations((prev) => [conv, ...prev]);
         setActiveId(conv.id);
       }
@@ -151,12 +170,22 @@ export default function ChatApp() {
         createdAt: now + 1,
       };
 
-      // CLI 세션은 API 키 모드에서는 의미가 없다. 같은 대화 안에서 모드를 바꾸면 새 세션으로 시작한다.
-      const sessionId = resolution.provider === 'apikey' ? null : conv.bridgeSessionId;
+      const localProvider = provider === 'desktop' || provider === 'bridge';
+      const sessionMatches =
+        localProvider &&
+        conv.bridgeSessionId &&
+        (!conv.bridgeSessionProvider || conv.bridgeSessionProvider === provider) &&
+        (!conv.bridgeSessionModel || conv.bridgeSessionModel === model);
+      const sessionId = sessionMatches ? conv.bridgeSessionId : null;
       const history = conv.messages;
 
       patchConversation(conv.id, (c) => ({
         ...c,
+        model,
+        contextProvider: provider,
+        bridgeSessionId: localProvider ? sessionId : null,
+        bridgeSessionProvider: localProvider ? provider : null,
+        bridgeSessionModel: localProvider ? model : null,
         title: c.messages.length === 0 ? titleFrom(text) : c.title,
         messages: [...c.messages, userMsg, assistantMsg],
         updatedAt: now,
@@ -186,9 +215,9 @@ export default function ChatApp() {
       };
 
       try {
-        const stream = send(resolution.provider, settings, {
+        const stream = send(provider, settings, {
           message: text,
-          model: conv.model ?? settings.model,
+          model,
           sessionId,
           history,
           signal: controller.signal,
@@ -198,7 +227,12 @@ export default function ChatApp() {
           switch (event.type) {
             case 'meta':
               if (event.sessionId) {
-                patchConversation(conv.id, (c) => ({ ...c, bridgeSessionId: event.sessionId ?? null }));
+                patchConversation(conv.id, (c) => ({
+                  ...c,
+                  bridgeSessionId: event.sessionId ?? null,
+                  bridgeSessionProvider: localProvider ? provider : null,
+                  bridgeSessionModel: localProvider ? model : null,
+                }));
               }
               break;
             case 'delta':
@@ -216,7 +250,9 @@ export default function ChatApp() {
               flush(true);
               patchConversation(conv.id, (c) => ({
                 ...c,
-                bridgeSessionId: event.sessionId ?? c.bridgeSessionId,
+                bridgeSessionId: localProvider ? (event.sessionId ?? c.bridgeSessionId) : null,
+                bridgeSessionProvider: localProvider ? provider : null,
+                bridgeSessionModel: localProvider ? model : null,
                 updatedAt: Date.now(),
                 messages: c.messages.map((m) =>
                   m.id === assistantId
@@ -266,7 +302,15 @@ export default function ChatApp() {
   const setModel = useCallback(
     (model: ModelId) => {
       setSettings((s) => ({ ...s, model }));
-      if (active) patchConversation(active.id, (c) => ({ ...c, model }));
+      if (active) {
+        if (active.messages.length > 0 && active.model !== model) {
+          const conv = emptyConversation(model);
+          setConversations((prev) => [conv, ...prev]);
+          setActiveId(conv.id);
+        } else {
+          patchConversation(active.id, (c) => ({ ...c, model }));
+        }
+      }
     },
     [active, patchConversation],
   );
@@ -277,12 +321,14 @@ export default function ChatApp() {
   }
 
   const subscription = resolution.provider === 'desktop' || resolution.provider === 'bridge';
-  const badgeState = subscription ? 'ok' : resolution.provider === 'apikey' ? 'warn' : 'err';
+  const badgeState = subscription || resolution.provider === 'openai' ? 'ok' : resolution.provider === 'apikey' ? 'warn' : 'err';
   const badgeLabel = subscription
     ? '구독 (추가 비용 없음)'
-    : resolution.provider === 'apikey'
-      ? 'API 키 (종량제)'
-      : '연결 안 됨';
+    : resolution.provider === 'openai'
+      ? 'OpenAI 데모'
+      : resolution.provider === 'apikey'
+        ? 'API 키 (종량제)'
+        : '연결 안 됨';
 
   return (
     <div className="shell">
@@ -329,12 +375,12 @@ export default function ChatApp() {
 
           <select
             className="select"
-            value={active?.model ?? settings.model}
+            value={selectedModel}
             onChange={(e) => setModel(e.target.value as ModelId)}
             aria-label="모델 선택"
             disabled={sending}
           >
-            {MODELS.map((m) => (
+            {availableModels.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.label}
               </option>

@@ -30,6 +30,7 @@ const NODE_BUILTINS_UNUSED_IN_BROWSER = [
 ];
 
 const NODE_SCHEME_RE = new RegExp(`^node:(${NODE_BUILTINS_UNUSED_IN_BROWSER.join('|')})$`);
+const HOSTED = process.env.OWNCHAT_HOSTED === '1';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -41,7 +42,12 @@ const nextConfig = {
    *   - 호스팅 웹사이트
    *   - Electron 데스크톱 앱의 렌더러 (app:// 커스텀 스킴으로 서빙)
    */
-  output: 'export',
+  ...(HOSTED ? {} : { output: 'export' }),
+  // route.hosted.ts는 서버 프로필에서만 App Router 라우트로 인식된다.
+  pageExtensions: HOSTED ? ['hosted.ts', 'hosted.tsx', 'ts', 'tsx'] : ['ts', 'tsx'],
+  env: {
+    NEXT_PUBLIC_OWNCHAT_HOSTED: HOSTED ? '1' : '0',
+  },
   // Electron이 app://ownchat/index.html 로 로드하므로 자산 경로가 절대 경로여도 된다.
   poweredByHeader: false,
   webpack: (config, { isServer, webpack }) => {
