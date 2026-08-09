@@ -97,6 +97,14 @@ Vercel 프로젝트의 Root Directory는 `apps/rpg`로 둔다. `vercel.json`이 
 넣는다. `DATABASE_URL`, `OPENAI_API_KEY`, `ADMIN_SYNC_SECRET`에는 절대 `NEXT_PUBLIC_` 접두사를
 붙이지 않는다.
 
+같은 PostgreSQL 데이터베이스를 다른 프로젝트와 공유하므로 `DATABASE_SCHEMA=ownchat`을
+사용한다. 모든 RPG 테이블과 마이그레이션 기록은 `public`이 아니라 `ownchat` 스키마 안에
+생성된다.
+
+현재 가비아 PostgreSQL 엔드포인트는 TLS 연결 검사에 실패했으므로 데모에서는
+`DATABASE_SSL=disable`을 사용한다. 외부 인터넷을 통해 DB 비밀번호와 데이터가 암호화되지
+않고 전달되는 한계가 있어, 장기 운영이나 실고객 서비스 전에는 TLS 지원 DB로 이전한다.
+
 ```bash
 npm run rpg:db:migrate    # DB 최초 1회 및 스키마 변경 후 실행
 npm run rpg:hosted        # localhost:3200 호스팅 프로파일

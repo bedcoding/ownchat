@@ -1,3 +1,4 @@
+-- The migration runner sets search_path to DATABASE_SCHEMA (default: ownchat).
 CREATE TABLE IF NOT EXISTS works (
   id text PRIMARY KEY,
   title text NOT NULL,

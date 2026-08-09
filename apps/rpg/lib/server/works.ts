@@ -1,5 +1,6 @@
 import 'server-only';
 import { query } from './db';
+import { databaseSchema, quoteDatabaseIdentifier } from './env';
 import type { Work } from '../types';
 
 interface WorkRow {
@@ -7,9 +8,10 @@ interface WorkRow {
 }
 
 export async function listPublishedWorks(): Promise<Work[]> {
+  const schema = quoteDatabaseIdentifier(databaseSchema());
   const result = await query<WorkRow>(
     `SELECT content
-       FROM works
+       FROM ${schema}.works
       WHERE status = 'published'
       ORDER BY published_at DESC NULLS LAST, updated_at DESC`,
   );

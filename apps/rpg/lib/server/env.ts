@@ -2,9 +2,12 @@ import 'server-only';
 
 export interface DatabaseEnvironment {
   connectionString: string;
+  schema: string;
   maxConnections: number;
   ssl?: false | { rejectUnauthorized: boolean };
 }
+
+const DATABASE_IDENTIFIER = /^[a-z_][a-z0-9_]*$/i;
 
 function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
@@ -17,6 +20,19 @@ export function hasDatabaseConfiguration(): boolean {
 
 export function hasOpenAIConfiguration(): boolean {
   return Boolean(process.env.OPENAI_API_KEY?.trim());
+}
+
+export function databaseSchema(): string {
+  const schema = process.env.DATABASE_SCHEMA?.trim() || 'ownchat';
+  if (!DATABASE_IDENTIFIER.test(schema)) {
+    throw new Error('DATABASE_SCHEMA may contain only letters, numbers, and underscores');
+  }
+  return schema;
+}
+
+export function quoteDatabaseIdentifier(identifier: string): string {
+  if (!DATABASE_IDENTIFIER.test(identifier)) throw new Error('Invalid PostgreSQL identifier');
+  return `"${identifier}"`;
 }
 
 export function databaseEnvironment(): DatabaseEnvironment {
@@ -43,7 +59,8 @@ export function databaseEnvironment(): DatabaseEnvironment {
 
   return {
     connectionString,
-    maxConnections: positiveInteger(process.env.DATABASE_POOL_MAX, 3),
+    schema: databaseSchema(),
+    maxConnections: positiveInteger(process.env.DATABASE_POOL_MAX, 1),
     ...(ssl === undefined ? {} : { ssl }),
   };
 }

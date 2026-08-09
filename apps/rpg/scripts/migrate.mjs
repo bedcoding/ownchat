@@ -15,6 +15,12 @@ if (!connectionString) {
   console.error('DATABASE_URL is missing. Add it to apps/rpg/.env.local or the process environment.');
   process.exitCode = 1;
 } else {
+  const schema = process.env.DATABASE_SCHEMA?.trim() || 'ownchat';
+  if (!/^[a-z_][a-z0-9_]*$/i.test(schema)) {
+    console.error('DATABASE_SCHEMA may contain only letters, numbers, and underscores.');
+    process.exit(1);
+  }
+  const quotedSchema = `"${schema}"`;
   const sslMode = process.env.DATABASE_SSL?.trim().toLowerCase();
   const ssl =
     sslMode === 'disable'
@@ -39,14 +45,17 @@ if (!connectionString) {
     const client = await pool.connect();
     try {
       await client.query('SELECT pg_advisory_lock($1)', [1_946_446_721]);
+      await client.query(`CREATE SCHEMA IF NOT EXISTS ${quotedSchema}`);
       await client.query(`
-        CREATE TABLE IF NOT EXISTS schema_migrations (
+        CREATE TABLE IF NOT EXISTS ${quotedSchema}.schema_migrations (
           name text PRIMARY KEY,
           applied_at timestamptz NOT NULL DEFAULT now()
         )
       `);
 
-      const appliedResult = await client.query('SELECT name FROM schema_migrations');
+      const appliedResult = await client.query(
+        `SELECT name FROM ${quotedSchema}.schema_migrations`,
+      );
       const applied = new Set(appliedResult.rows.map((row) => row.name));
 
       for (const file of files) {
@@ -54,8 +63,12 @@ if (!connectionString) {
         const sql = await fs.readFile(path.join(MIGRATIONS_DIR, file), 'utf8');
         await client.query('BEGIN');
         try {
+          await client.query(`SET LOCAL search_path TO ${quotedSchema}, pg_catalog`);
           await client.query(sql);
-          await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [file]);
+          await client.query(
+            `INSERT INTO ${quotedSchema}.schema_migrations (name) VALUES ($1)`,
+            [file],
+          );
           await client.query('COMMIT');
           console.log(`Applied ${file}`);
         } catch (error) {
@@ -64,7 +77,7 @@ if (!connectionString) {
         }
       }
 
-      console.log('Database migrations are up to date.');
+      console.log(`Database schema ${schema} is up to date.`);
     } finally {
       try {
         await client.query('SELECT pg_advisory_unlock($1)', [1_946_446_721]);
