@@ -17,6 +17,13 @@ export default function Home() {
           <div className="d">발행된 트리를 플레이합니다</div>
         </Link>
 
+        <Link className="link-card" href="/chat">
+          <div className="t">AI 자유 채팅</div>
+          <div className="d">
+            {isAdminBuild ? '로컬 Claude로 대화하고 작품 아이디어를 시험합니다' : 'OpenAI 데모 서버로 자유롭게 대화합니다'}
+          </div>
+        </Link>
+
         <Link className="link-card" href="/tour">
           <div className="t">제품 둘러보기</div>
           <div className="d">실제 플레이 화면 위에서 주요 기능을 확인합니다</div>

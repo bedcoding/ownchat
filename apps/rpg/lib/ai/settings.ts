@@ -15,7 +15,7 @@ export const DEFAULT_BRIDGE_URL = 'http://127.0.0.1:4319';
 export const DEFAULT_MODEL = 'claude-opus-5';
 
 export function emptySettings(): AiSettings {
-  return { bridgeUrl: DEFAULT_BRIDGE_URL, bridgeToken: '', apiKey: '', model: DEFAULT_MODEL };
+  return { bridgeUrl: DEFAULT_BRIDGE_URL, bridgeToken: '', apiKey: '', demoToken: '', model: DEFAULT_MODEL };
 }
 
 export function loadSettings(): AiSettings {
@@ -28,6 +28,7 @@ export function loadSettings(): AiSettings {
       bridgeUrl: saved.bridgeUrl?.trim() || DEFAULT_BRIDGE_URL,
       bridgeToken: saved.bridgeToken ?? '',
       apiKey: saved.apiKey ?? '',
+      demoToken: saved.demoToken ?? '',
       model: saved.model || DEFAULT_MODEL,
     };
   } catch {

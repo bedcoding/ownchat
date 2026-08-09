@@ -5,7 +5,7 @@
  *   1. 관리자 저작 — 설정 한 줄에서 트리 초안을 뽑는다 (`lib/ai/generate.ts`)
  *   2. 심문 노드 — 플레이어가 목격자에게 자유 질문을 한다 (`lib/ai/probe.ts`)
  *
- * 둘 다 **사용자 기기에서 직접** 모델로 나간다. 이 저장소의 서버는 추론 경로에 없다.
+ * 관리자 빌드는 사용자 기기에서 Claude로 직접 나가고, 공개 웹의 심문은 서버의 OpenAI 키를 쓴다.
  */
 
 /** 어느 경로로 모델에 닿는가 */
@@ -13,7 +13,9 @@ export type AiRoute =
   /** 내 PC 의 Claude Code (로컬 브리지 경유). 구독 요금 안에서 돈다 */
   | 'bridge'
   /** 본인 API 키로 api.anthropic.com 직접 호출. 사용량만큼 과금 */
-  | 'apikey';
+  | 'apikey'
+  /** Vercel 서버가 보관한 OpenAI 키. 공개 사용자 심문 전용 */
+  | 'openai';
 
 export interface AiTurn {
   role: 'user' | 'assistant';
@@ -45,6 +47,8 @@ export interface AiSettings {
   bridgeToken: string;
   /** 본인 Anthropic API 키 */
   apiKey: string;
+  /** 배포자가 서버 접근 코드를 설정한 경우에만 사용 */
+  demoToken: string;
   model: string;
 }
 

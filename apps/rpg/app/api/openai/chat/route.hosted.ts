@@ -13,6 +13,7 @@ const MAX_BODY_BYTES = 256_000;
 const MAX_MESSAGE_CHARS = 60_000;
 const MAX_HISTORY_MESSAGES = 20;
 const MAX_HISTORY_CHARS = 40_000;
+const MAX_INSTRUCTIONS_CHARS = 12_000;
 const MAX_OUTPUT_TOKENS = 2_048;
 const RATE_WINDOW_MS = 10 * 60_000;
 const RATE_LIMIT = Math.max(1, Number(process.env.OWNCHAT_RATE_LIMIT ?? 30) || 30);
@@ -101,11 +102,11 @@ async function readLimitedBody(request: NextRequest): Promise<string | null> {
   }
 }
 
-function reserveDailyTokens(characters: number): boolean {
+function reserveDailyTokens(characters: number, outputTokens: number): boolean {
   const day = new Date().toISOString().slice(0, 10);
   if (dailyBudget.day !== day) dailyBudget = { day, reservedTokens: 0 };
   // 한국어와 코드도 넉넉히 잡도록 1글자를 최대 2토큰으로 추정하고 최대 출력을 더한다.
-  const estimate = characters * 2 + MAX_OUTPUT_TOKENS;
+  const estimate = characters * 2 + outputTokens;
   if (dailyBudget.reservedTokens + estimate > DAILY_TOKEN_BUDGET) return false;
   dailyBudget.reservedTokens += estimate;
   return true;
@@ -129,13 +130,13 @@ function sanitizeHistory(history: unknown): Array<{ role: 'user' | 'assistant'; 
 export async function POST(request: NextRequest): Promise<Response> {
   const apiKey = process.env.OPENAI_API_KEY?.trim() ?? '';
   const demoToken = process.env.OWNCHAT_DEMO_TOKEN?.trim() ?? '';
-  if (!apiKey || !demoToken) {
+  if (!apiKey) {
     return json(503, {
       error: 'server_not_configured',
-      message: '서버에 OPENAI_API_KEY와 OWNCHAT_DEMO_TOKEN을 설정해야 합니다.',
+      message: '서버에 OPENAI_API_KEY를 설정해야 합니다.',
     });
   }
-  if (!secretMatches(demoToken, bearer(request))) {
+  if (demoToken && !secretMatches(demoToken, bearer(request))) {
     return json(401, { error: 'unauthorized', message: '데모 접근 코드가 올바르지 않습니다.' });
   }
   if (rateLimited(clientKey(request))) {
@@ -145,7 +146,13 @@ export async function POST(request: NextRequest): Promise<Response> {
   const raw = await readLimitedBody(request);
   if (raw === null) return json(413, { error: 'body_too_large', message: '요청이 너무 큽니다.' });
 
-  let body: { message?: unknown; model?: unknown; history?: unknown };
+  let body: {
+    message?: unknown;
+    model?: unknown;
+    history?: unknown;
+    instructions?: unknown;
+    maxOutputTokens?: unknown;
+  };
   try {
     body = JSON.parse(raw || '{}') as typeof body;
   } catch {
@@ -160,10 +167,27 @@ export async function POST(request: NextRequest): Promise<Response> {
   const history = sanitizeHistory(body.history);
   if (!history) return json(413, { error: 'history_too_large', message: '대화 이력이 너무 큽니다. 새 대화를 시작하세요.' });
 
+  const instructions =
+    typeof body.instructions === 'string' && body.instructions.trim()
+      ? body.instructions.trim()
+      : [
+          '너는 일반 채팅 어시스턴트다.',
+          '한국어로 물으면 한국어로 답한다.',
+          '결론을 먼저 말하고 질문 크기에 맞는 길이로 답한다.',
+          '확실하지 않은 내용은 추측이라고 분명히 밝힌다.',
+        ].join('\n');
+  if (instructions.length > MAX_INSTRUCTIONS_CHARS) {
+    return json(413, { error: 'instructions_too_long', message: '역할 지침이 너무 깁니다.' });
+  }
+  const requestedOutputTokens = Number(body.maxOutputTokens);
+  const maxOutputTokens = Number.isSafeInteger(requestedOutputTokens)
+    ? Math.min(MAX_OUTPUT_TOKENS, Math.max(128, requestedOutputTokens))
+    : MAX_OUTPUT_TOKENS;
+
   const requestedModel = typeof body.model === 'string' ? body.model : '';
   const model = ALLOWED_MODELS.has(requestedModel) ? requestedModel : DEFAULT_MODEL;
   const inputCharacters = history.reduce((total, item) => total + item.content.length, message.length);
-  if (!reserveDailyTokens(inputCharacters)) {
+  if (!reserveDailyTokens(inputCharacters + instructions.length, maxOutputTokens)) {
     return json(429, {
       error: 'daily_budget_exhausted',
       message: '오늘의 데모 토큰 예산을 모두 사용했습니다. 내일 다시 시도하세요.',
@@ -180,16 +204,11 @@ export async function POST(request: NextRequest): Promise<Response> {
       },
       body: JSON.stringify({
         model,
-        instructions: [
-          '너는 일반 채팅 어시스턴트다.',
-          '한국어로 물으면 한국어로 답한다.',
-          '결론을 먼저 말하고 질문 크기에 맞는 길이로 답한다.',
-          '확실하지 않은 내용은 추측이라고 분명히 밝힌다.',
-        ].join('\n'),
+        instructions,
         input: [...history, { role: 'user', content: message }],
         reasoning: { effort: 'none' },
         text: { verbosity: 'medium' },
-        max_output_tokens: MAX_OUTPUT_TOKENS,
+        max_output_tokens: maxOutputTokens,
         store: false,
         stream: true,
       }),

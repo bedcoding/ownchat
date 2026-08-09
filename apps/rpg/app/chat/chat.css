@@ -1,4 +1,4 @@
-:root {
+.ownchat-chat {
   --bg: #ffffff;
   --bg-soft: #f6f6f4;
   --bg-raised: #ffffff;
@@ -16,7 +16,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  .ownchat-chat {
     --bg: #17171a;
     --bg-soft: #1e1e22;
     --bg-raised: #232329;
@@ -32,18 +32,18 @@
   }
 }
 
-* {
+.ownchat-chat,
+.ownchat-chat * {
   box-sizing: border-box;
 }
 
-html,
-body {
+.ownchat-chat {
   margin: 0;
   padding: 0;
   height: 100%;
 }
 
-body {
+.ownchat-chat {
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -246,6 +246,10 @@ select {
   border-color: transparent;
   background: transparent;
   color: var(--text-dim);
+}
+
+.chat-home-link {
+  text-decoration: none;
 }
 
 .select {

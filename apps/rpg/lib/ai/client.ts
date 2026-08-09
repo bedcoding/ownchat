@@ -1,6 +1,8 @@
 import { askApiKey } from './apikey';
 import { askBridge, bridgeUsable, checkBridge } from './bridge';
+import { askOpenAI } from './openai';
 import { bridgePossible } from './settings';
+import { isHostedBuild } from '../profile';
 import type { AiEvent, AiRoute, AiSettings, AskOptions, BridgeHealth } from './types';
 
 /**
@@ -18,6 +20,10 @@ export interface Resolution {
 }
 
 export function resolveRoute(settings: AiSettings, health: BridgeHealth | null): Resolution {
+  if (isHostedBuild) {
+    return { route: 'openai', reason: 'OpenAI GPT-5.4 mini · 서버 키는 브라우저에 노출되지 않습니다.' };
+  }
+
   // 폰·태블릿에는 로컬 브리지가 존재할 수 없다. 유일하게 가능한 경로로 곧장 안내한다.
   if (!bridgePossible()) {
     if (settings.apiKey) return { route: 'apikey', reason: '내 API 키로 처리합니다 (사용량만큼 과금).' };
@@ -53,11 +59,13 @@ export function resolveRoute(settings: AiSettings, health: BridgeHealth | null):
 }
 
 export function probeBridge(settings: AiSettings): Promise<BridgeHealth | null> {
+  if (isHostedBuild) return Promise.resolve(null);
   if (!bridgePossible()) return Promise.resolve(null);
   return checkBridge(settings.bridgeUrl);
 }
 
 export function ask(route: AiRoute, settings: AiSettings, opts: AskOptions): AsyncGenerator<AiEvent> {
+  if (route === 'openai') return askOpenAI(settings, opts);
   if (route === 'bridge') {
     return askBridge({
       ...opts,

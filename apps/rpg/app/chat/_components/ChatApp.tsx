@@ -1,11 +1,19 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { hostedOpenAIAvailable } from '@/lib/capabilities';
-import { modelsForProvider, normalizeModel, type ModelId } from '@/lib/models';
-import { checkLocal, isDesktop, resolveProvider, send } from '@/lib/providers';
-import { DEFAULT_SETTINGS, loadConversations, loadSettings, newId, saveConversations, saveSettings } from '@/lib/storage';
-import type { BridgeHealth, Conversation, Message, Settings } from '@/lib/types';
+import { hostedOpenAIAvailable } from '@/lib/chat/capabilities';
+import { modelsForProvider, normalizeModel, type ModelId } from '@/lib/chat/models';
+import { checkLocal, isDesktop, resolveProvider, send } from '@/lib/chat/providers';
+import {
+  DEFAULT_SETTINGS,
+  loadConversations,
+  loadSettings,
+  newId,
+  saveConversations,
+  saveSettings,
+} from '@/lib/chat/storage';
+import type { BridgeHealth, Conversation, Message, Settings } from '@/lib/chat/types';
 import Composer from './Composer';
 import EmptyState from './EmptyState';
 import MessageList from './MessageList';
@@ -317,7 +325,7 @@ export default function ChatApp() {
 
   if (!hydrated) {
     // localStorage를 읽기 전에 UI를 그리면 서버 렌더 결과와 어긋난다.
-    return <div className="shell" aria-busy="true" />;
+    return <div className="ownchat-chat shell" aria-busy="true" />;
   }
 
   const subscription = resolution.provider === 'desktop' || resolution.provider === 'bridge';
@@ -331,7 +339,7 @@ export default function ChatApp() {
         : '연결 안 됨';
 
   return (
-    <div className="shell">
+    <div className="ownchat-chat shell">
       <Sidebar
         conversations={conversations}
         activeId={activeId}
@@ -388,6 +396,10 @@ export default function ChatApp() {
           </select>
 
           <span className="spacer" />
+
+          <Link className="btn ghost chat-home-link" href="/">
+            게임
+          </Link>
 
           <button type="button" className="btn ghost" onClick={() => setSettingsOpen(true)}>
             설정

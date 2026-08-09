@@ -12,10 +12,7 @@ export const DEFAULT_PORT = 4319;
  * 오리진 허용목록은 그 위에 얹는 두 번째 층이다.
  */
 const BUILTIN_ORIGINS = [
-  // ownchat 채팅 UI (apps/web)
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  // 선택지 게임의 관리자 저작 화면 (apps/rpg) — 트리 초안 생성이 이 브리지를 부른다
+  // 통합 앱의 AI 채팅과 관리자 저작 화면 (apps/rpg)
   'http://localhost:3200',
   'http://127.0.0.1:3200',
 ];

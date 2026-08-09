@@ -7,11 +7,11 @@ directories:
   buildResources: build
 
 # 메인 프로세스는 build/main.mjs 로 번들되어 있고 프로덕션 의존성이 없다.
-# 렌더러는 apps/web 의 정적 export 결과물을 app.asar 안 renderer/ 로 복사한다.
+# 렌더러는 통합 apps/rpg 의 관리자 정적 export를 app.asar 안 renderer/ 로 복사한다.
 files:
   - package.json
   - build/**/*
-  - from: ../web/out
+  - from: ../rpg/out
     to: renderer
     filter:
       - '**/*'

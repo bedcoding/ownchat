@@ -28,13 +28,18 @@ apps/desktop/        Electron 앱  ← 구독 요금 경로
   scripts/build-main.mjs  esbuild로 메인을 한 파일로 번들
   electron-builder.yml    패키징 설정
 
-apps/web/            Next.js UI  ← 렌더러 겸 호스팅 웹사이트
-  lib/providers/       전송 계층 3개
+apps/rpg/            통합 Next.js UI  ← Electron 렌더러 + Vercel 웹
+  lib/chat/providers/  자유 채팅 전송 계층 4개
     desktop.ts           IPC        (데스크톱 앱 안)
-    bridge.ts            HTTP/SSE   (호스팅 웹 + 로컬 브리지)
+    bridge.ts            HTTP/SSE   (관리자 웹 + 로컬 브리지)
     apikey.ts            직접 호출  (BYOK, 어디서든)
+    openai.ts            서버 호출  (Vercel hosted 프로필)
     index.ts             어느 것을 쓸지 결정 (resolveProvider)
-  app/_chat/           채팅 UI 컴포넌트
+  app/chat/            채팅 UI
+  app/play/            버튼형 스토리 + 자유 심문
+  app/admin/           관리자 저작 도구
+  app/tour/            실제 화면 기반 제품 투어
+  app/api/             PostgreSQL/OpenAI 서버 경로
 
 packages/bridge/      호스팅 웹에서 구독을 쓰기 위한 로컬 HTTP 브리지
   src/server.mjs         HTTP + SSE + CORS + 토큰 검사
@@ -59,9 +64,8 @@ UI는 `isDesktop()`(= `window.ownchat` 존재 여부) 하나로 갈린다.
 두 질문을 분리해야 한다.
 
 **(가) 폰에서 이 채팅을 쓰는 것 — 이미 된다. 별도 앱 개발이 필요 없다.**
-웹 UI가 브라우저에서 돌고, BYOK 경로는 폰에서 그대로 작동한다(브라우저가
-`api.anthropic.com` 을 직접 부르므로 서버도 브리지도 필요 없다). 375px 레이아웃은
-검증했다. 남은 것은 PWA(홈 화면 설치)와 실기기 터치 확인 정도다.
+hosted 프로필은 서버의 OpenAI API를 사용하고, 관리자/BYOK 프로필은 브라우저에서
+`api.anthropic.com` 을 직접 부른다. 390px 레이아웃과 사이드바 서랍을 검증했다.
 
 폰에서는 UI가 **구독 이야기를 아예 꺼내지 않는다** (`lib/capabilities.ts`).
 "터미널에서 `npx @ownchat/bridge` 를 실행하세요"는 폰에서 실행할 수 없는 안내이고,
@@ -102,7 +106,7 @@ npm install
 ### 데스크톱 앱
 
 ```bash
-npm run build -w @ownchat/web    # 렌더러 정적 export (apps/web/out)
+npm run rpg:build:admin          # 통합 렌더러 정적 export (apps/rpg/out)
 npm run start -w @ownchat/desktop
 ```
 
@@ -124,7 +128,7 @@ npm run dist -w @ownchat/desktop   # 설치 파일까지
 
 ```bash
 npm run bridge      # 터미널 1 — 페어링 코드가 찍힌다
-npm run dev:web     # 터미널 2 — localhost:3000
+npm run dev:web     # 터미널 2 — localhost:3200
 ```
 
 ### 환경변수
@@ -172,7 +176,7 @@ npm run dev:web     # 터미널 2 — localhost:3000
   있지만(`spawn-util.mjs`, `auth.mjs`) 실제로 돌려본 적이 없다.
 - **자동화된 테스트가 하나도 없다.** 위 검증은 전부 수동이다.
 - BYOK(API 키) 경로의 실제 응답. 코드는 있고 타입 체크는 통과하지만 키가 없어 호출해 보지 못했다.
-  `apps/web/lib/providers/apikey.ts` 의 서버측 폴백(`fallbacks: "default"`) 분기가 특히 미검증이다.
+  `apps/rpg/lib/chat/providers/apikey.ts` 의 서버측 폴백(`fallbacks: "default"`) 분기가 특히 미검증이다.
 
 ---
 
@@ -221,7 +225,7 @@ npm run dev:web     # 터미널 2 — localhost:3000
     `await import('node:fs')` 를 하는데(전부 함수 안의 동적 import라 브라우저에서는 실행되지
     않는다), webpack은 정적 분석에서 스킴을 만나 빌드를 실패시킨다. `alias`는 리졸버 앞단에서
     처리되므로 무효다. `NormalModuleReplacementPlugin` 으로 스킴을 먼저 떼고 `resolve.fallback`
-    으로 빈 모듈을 물려야 한다 (`apps/web/next.config.mjs`).
+    으로 빈 모듈을 물려야 한다 (`apps/rpg/next.config.mjs`).
 
 ### CSS
 

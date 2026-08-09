@@ -54,9 +54,15 @@ export async function* streamOpenAI(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${opts.demoToken}`,
+        ...(opts.demoToken ? { Authorization: `Bearer ${opts.demoToken}` } : {}),
       },
-      body: JSON.stringify({ message: opts.message, model: opts.model, history: opts.history }),
+      body: JSON.stringify({
+        message: opts.message,
+        model: opts.model,
+        history: opts.history,
+        instructions: opts.instructions,
+        maxOutputTokens: opts.maxOutputTokens,
+      }),
       signal: opts.signal,
     });
   } catch (error) {

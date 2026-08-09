@@ -55,14 +55,12 @@ export function resolveProvider(settings: Settings, health: BridgeHealth | null)
     if (!hosted) {
       return { provider: null, reason: '이 빌드에는 OpenAI 데모 서버가 포함되어 있지 않습니다.', blocking: 'need_key' };
     }
-    if (!settings.demoToken) {
-      return {
-        provider: null,
-        reason: '공모전 데모 접근 코드를 입력하세요.',
-        blocking: 'need_demo_token',
-      };
-    }
-    return { provider: 'openai', reason: 'OpenAI GPT-5.4 mini 데모 · 서버 키는 브라우저에 노출되지 않습니다.' };
+    return {
+      provider: 'openai',
+      reason: settings.demoToken
+        ? 'OpenAI GPT-5.4 mini 데모 · 접근 코드로 보호됩니다.'
+        : 'OpenAI GPT-5.4 mini 데모 · 서버 키는 브라우저에 노출되지 않습니다.',
+    };
   }
 
   // 폰·태블릿에서는 구독 경로가 존재할 수 없다. 브리지를 띄우라는 안내를 하는 대신

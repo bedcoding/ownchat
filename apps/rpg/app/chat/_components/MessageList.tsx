@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { Message } from '@/lib/types';
+import type { Message } from '@/lib/chat/types';
 
 interface Props {
   messages: Message[];

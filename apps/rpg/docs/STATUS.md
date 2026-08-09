@@ -142,16 +142,20 @@ apps/rpg/
   lib/seal.ts        심문 진상 봉인 (암호가 아니다 — 우연한 노출만 막는다)
   lib/profile.ts     배포 프로파일 — 어떤 화면과 어떤 작품을 싣는가
   lib/storage.ts     localStorage — 발행본 + 플레이 상태
-  lib/ai/            AI 호출 계층 (관리자 저작 + 심문). 사용자 기기에서 직접 나간다
-    client.ts        경로 결정 (브리지 = 내 구독 / API 키 = 종량제)
+  lib/ai/            RPG AI 계층 (관리자 저작 + 심문)
+    client.ts        경로 결정 (관리자=로컬 Claude / hosted=OpenAI)
     bridge.ts        로컬 브리지 SSE
     apikey.ts        @anthropic-ai/sdk (동적 import — 안 쓰는 사용자는 청크를 받지 않는다)
+    openai.ts        hosted 프로필의 서버 OpenAI 어댑터
     generate.ts      설정 한 줄 → 트리 초안 (프롬프트 + 검증 + 1회 재시도)
     probe.ts         심문 대화 프롬프트
   data/sample.ts     자작 가상 웹툰 「재의 여울」 3화 (구조 검증용 시드)
   data/devquest.ts   「다음 화 없음」 9화 (데모용)
   data/mystery.ts    「눈에 갇힌 산장」 2화 (추리 문법 + 확률 + 심문 시연)
   app/play/          플레이어 — Runner.tsx 가 실제 러너, ProbePanel.tsx 가 심문
+  app/chat/          로컬 Claude/OpenAI를 자동 선택하는 범용 자유 채팅
+  app/tour/          실제 화면 기반 제품 투어
+  app/api/           hosted DB/OpenAI 서버 경로
   app/admin/         관리자 저작 도구 (page.admin.tsx = 프로파일로 제외되는 진입점)
   docs/STATUS.md     이 문서
 ```
@@ -300,7 +304,7 @@ SDK 를 동적 import 로 바꿔 `/play` 초기 번들이 175kB → 136kB.
 1. **심문 실 모델 검증** — 인젝션 방어와 해금은 검증했지만, 실제 모델 대화 품질(페르소나 유지,
    `withholds` 준수)은 아직 측정하지 않았다. 페어링 코드를 넣고 심문 노드에서 직접 물어봐야 한다
 2. **대회 서류** — 아래 "대회" 절의 평가 항목에 정렬해서 작성
-3. **Electron 포장** — `apps/desktop` 패턴 복제. `npm run rpg:build:admin` 결과물을 로드하면 된다
+3. **Electron 배포물 확인** — 통합 `apps/rpg/out` 포장은 연결됐다. 설치 파일과 실제 OS 실행을 확인한다
 4. **회차 이미지 입력** — 텍스트 경로가 동작하므로 그 위에 얹는다. `packages/core` 에 `allowTools`
    옵션을 추가해 요약 세션에만 `Read` 를 허용하고, 기본값은 현행(전부 차단) 유지
 
@@ -313,10 +317,8 @@ SDK 를 동적 import 로 바꿔 `/play` 초기 번들이 175kB → 136kB.
    (ownchat에서 사이드바가 이 이유로 안 숨겨진 적 있다)
 2. **dev 서버가 깨진 중간 저장 상태를 캐시한다.** `tsc`/`next build` 가 통과해도 dev는 계속
    구문 오류를 보여준다. → dev 죽이고 `.next` 지우고 재시작.
-3. **Browser 패널의 `mobile` 프리셋은 이제 터치 포인터도 흉내 낸다** (예전엔 뷰포트만 바꿨다).
-   `(pointer: coarse)` 가 true 가 되므로 `bridgePossible()` 이 false 를 반환한다 —
-   심문 화면에서 "이 기기에서는 API 키로만" 안내가 뜨는 것이 정상이다. 브리지 경로를 보려면
-   `desktop` 프리셋으로 바꾸고 **리로드**해야 한다 (로드 시점에 판정한다).
+3. **hosted 프로필은 기기 종류와 무관하게 OpenAI 경로를 우선한다.** 모바일에서 로컬 브리지 탐색이나
+   Anthropic API 키 안내가 보이면 `RPG_PROFILE=hosted` 빌드가 아닌지 확인한다.
 4. **Browser 패널이 표시되지 않으면 프레임을 합성하지 않아 CSS transition이 진행되지 않는다.**
    `getComputedStyle` 이 전환 시작값에 멈춘 값을 준다. 검사할 땐 `*{transition:none!important}` 주입.
 5. **패널이 숨겨져 있으면 `computer` 클릭이 타임아웃하고 `setTimeout` 이 throttle 된다.**

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { hostedOpenAIAvailable, subscriptionPossible } from '@/lib/capabilities';
-import { modelsForProvider, normalizeModel, type ModelId } from '@/lib/models';
-import { isDesktop } from '@/lib/providers';
-import type { BridgeHealth, ProviderMode, Settings } from '@/lib/types';
+import { hostedOpenAIAvailable, subscriptionPossible } from '@/lib/chat/capabilities';
+import { modelsForProvider, normalizeModel, type ModelId } from '@/lib/chat/models';
+import { isDesktop } from '@/lib/chat/providers';
+import type { BridgeHealth, ProviderMode, Settings } from '@/lib/chat/types';
 import LoginButton from './LoginButton';
 
 interface Props {
@@ -97,7 +97,7 @@ export default function SettingsPanel({
           </div>
           <span className="desc">
             {hosted
-              ? '공개 데모는 서버의 OpenAI 키를 사용합니다. 접근 코드는 API 키가 아닙니다.'
+              ? '공개 데모는 서버의 OpenAI 키를 사용합니다. 접근 코드는 배포자가 설정한 경우에만 필요합니다.'
               : !canUseSubscription
                 ? '이 기기에서는 API 키로만 쓸 수 있습니다.'
                 : 'Claude 구독 또는 본인 API 키 경로를 고를 수 있습니다.'}
@@ -106,17 +106,17 @@ export default function SettingsPanel({
 
         {hosted ? (
           <div className="field">
-            <label htmlFor="demoToken">데모 접근 코드</label>
+            <label htmlFor="demoToken">데모 접근 코드 (선택)</label>
             <input
               id="demoToken"
               type="password"
               value={draft.demoToken}
               onChange={(e) => set('demoToken', e.target.value.trim())}
-              placeholder="공모전 안내에 적힌 코드"
+              placeholder="배포자가 코드를 설정한 경우에만 입력"
               autoComplete="off"
               spellCheck={false}
             />
-            <span className="desc">브라우저에 저장되며 이 데모 서버의 요청 승인에만 사용됩니다.</span>
+            <span className="desc">비워 두면 바로 연결하고, 서버가 보호된 경우에만 입력합니다.</span>
           </div>
         ) : null}
 

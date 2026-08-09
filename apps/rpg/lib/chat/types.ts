@@ -102,5 +102,8 @@ export interface SendOptions {
   sessionId?: string | null;
   /** API 키 모드에서 그대로 보낼 대화 이력 */
   history: Message[];
+  /** RPG 등장인물처럼 서버 기본 역할 대신 적용할 지침. 서버에서 길이를 다시 제한한다. */
+  instructions?: string;
+  maxOutputTokens?: number;
   signal: AbortSignal;
 }

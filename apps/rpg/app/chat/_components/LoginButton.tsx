@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { desktopApi, startLocalLogin } from '@/lib/providers';
-import type { Settings } from '@/lib/types';
+import { desktopApi, startLocalLogin } from '@/lib/chat/providers';
+import type { Settings } from '@/lib/chat/types';
 
 interface Props {
   settings: Settings;

@@ -30,12 +30,12 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 /**
  * next build(output: 'export') 결과물의 위치.
  *
- * 개발 중에는 워크스페이스의 apps/web/out 을 그대로 읽고, 패키징된 앱에서는
+ * 개발 중에는 통합 앱의 apps/rpg/out 을 그대로 읽고, 패키징된 앱에서는
  * electron-builder가 app.asar 안 renderer/ 로 복사해 둔 것을 읽는다.
  */
-const RENDERER_DIR = [path.join(HERE, '..', 'renderer'), path.resolve(HERE, '..', '..', 'web', 'out')].find((dir) =>
+const RENDERER_DIR = [path.join(HERE, '..', 'renderer'), path.resolve(HERE, '..', '..', 'rpg', 'out')].find((dir) =>
   fs.existsSync(path.join(dir, 'index.html')),
-) ?? path.resolve(HERE, '..', '..', 'web', 'out');
+) ?? path.resolve(HERE, '..', '..', 'rpg', 'out');
 
 /** next dev 서버를 쓰는 개발 모드 */
 const DEV_URL = process.env.OWNCHAT_DEV_URL || null;

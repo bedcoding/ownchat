@@ -7,11 +7,11 @@
   "type": "module",
   "main": "build/main.mjs",
   "scripts": {
-    "dev": "cross-env OWNCHAT_DEV_URL=http://localhost:3000 npm run start",
+    "dev": "cross-env OWNCHAT_DEV_URL=http://localhost:3200 npm run start",
     "start": "npm run build:main && electron .",
     "build:main": "node scripts/build-main.mjs",
-    "pack": "npm run build -w @ownchat/web && npm run build:main && electron-builder --dir",
-    "dist": "npm run build -w @ownchat/web && npm run build:main && electron-builder"
+    "pack": "npm run build:admin -w @ownchat/rpg && npm run build:main && electron-builder --dir",
+    "dist": "npm run build:admin -w @ownchat/rpg && npm run build:main && electron-builder"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

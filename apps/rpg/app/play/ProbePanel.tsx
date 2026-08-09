@@ -15,8 +15,8 @@ import type { PlayState, StoryNode } from '@/lib/types';
  * 이 패널이 붙은 노드에서도 **선택지는 그대로 있다.** 심문을 건너뛰고 진행할 수 있어야
  * AI 를 못 쓰는 기기에서도 작품이 막히지 않는다.
  *
- * 추론 비용은 사용자 쪽에서 발생한다 — PC 라면 본인 Claude 구독(로컬 브리지), 폰이라면 본인 API 키.
- * 이 저장소의 서버는 어느 경로에도 끼지 않는다.
+ * 설치형 관리자 미리보기는 로컬 Claude를 쓰고, 공개 웹은 서버의 OpenAI API를 쓴다.
+ * 어느 경로든 상태 변경은 모델이 아니라 아래 엔진 함수가 담당한다.
  */
 
 interface Props {
@@ -151,6 +151,9 @@ export default function ProbePanel({ node, state, onState, demo, tourMode = fals
       </div>
 
       {demo ? <div className="probe-demo-note">둘러보기용 예시 대화 · API를 호출하지 않습니다</div> : null}
+      {!demo && resolution.route === 'openai' ? (
+        <div className="probe-demo-note">OpenAI 자유 심문 · API 키는 서버에만 보관됩니다</div>
+      ) : null}
 
       {probe.intro ? <p className="probe-intro">{probe.intro}</p> : null}
 
@@ -176,6 +179,25 @@ export default function ProbePanel({ node, state, onState, demo, tourMode = fals
       ) : null}
 
       {failure ? <div className="probe-error">{failure}</div> : null}
+
+      {!demo && resolution.route === 'openai' ? (
+        <div className="probe-setup">
+          <button className="mini" onClick={() => setShowSetup((value) => !value)}>
+            {showSetup ? '접속 코드 닫기' : '접속 코드'}
+          </button>
+          {showSetup ? (
+            <label className="field">
+              <span>데모 접근 코드 (서버가 보호된 경우에만)</span>
+              <input
+                type="password"
+                value={settings.demoToken}
+                placeholder="비워 두면 공개 데모로 연결"
+                onChange={(event) => update({ demoToken: event.target.value.trim() })}
+              />
+            </label>
+          ) : null}
+        </div>
+      ) : null}
 
       {checking ? (
         <p className="hint-line">연결을 확인하는 중…</p>

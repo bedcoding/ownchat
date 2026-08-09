@@ -37,7 +37,7 @@ interface Props {
  *
  * **심문 노드(`node.probe`)가 없는 작품에서는 네트워크 호출이 한 줄도 없다** — 그 작품은
  * 비행기 모드에서 그대로 돈다. 심문 노드를 쓰는 작품만 그 노드에서 `ProbePanel` 이 모델을
- * 부르고, 그때도 요청은 사용자 기기에서 직접 나간다(이 사이트의 서버는 끼지 않는다).
+ * 부른다. 관리자 빌드는 로컬 Claude, hosted 빌드는 서버의 OpenAI 경로를 사용한다.
  * 작품이 어느 쪽인지는 `requiresRuntimeAI()` 가 데이터에서 판정한다.
  */
 export default function Runner({

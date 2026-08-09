@@ -88,7 +88,7 @@ RPG_PROFILE=snowlodge npm run build -w @ownchat/rpg   # 그 작품만 수록
 | 명령 | 결과 |
 |---|---|
 | `npm run rpg:build:admin` | Electron에 넣을 정적 관리자/미리보기 (`out/`) |
-| `npm run rpg:build:hosted` | Vercel용 Next.js 서버 + 공개 플레이어 |
+| `npm run rpg:build:hosted` | Vercel용 Next.js 서버 + 공개 플레이어 + AI 채팅 |
 
 Vercel 프로젝트의 Root Directory는 `apps/rpg`로 둔다. `vercel.json`이 호스팅 빌드 명령을
 고정하므로 기본 정적 빌드가 실수로 배포되지 않는다.
@@ -112,6 +112,8 @@ npm run rpg:hosted        # localhost:3200 호스팅 프로파일
 
 - `GET /api/health`: DB/OpenAI 환경 설정 상태 확인. 비밀값은 반환하지 않는다.
 - `GET /api/works`: PostgreSQL의 발행 작품을 읽는다.
+- `GET /api/tour`: PostgreSQL의 제출용 투어 문서를 읽고 장애 시 중립 번들로 폴백한다.
+- `POST /api/openai/chat`: 자유 채팅과 RPG 심문이 공유하는 OpenAI 스트리밍 경로다.
 - 사용자 작품 로딩 폴백: PostgreSQL -> 브라우저 마지막 정상 스냅샷 -> 번들 작품.
 
 현재 DB API는 공개 읽기만 준비되어 있다. 관리자 발행 동기화는 `ADMIN_SYNC_SECRET` 인증을
@@ -133,16 +135,20 @@ cp .env.local.example .env.local
 
 ```
 app/play/     트리 러너 (플레이어 + 관리자 미리보기가 공유) · ProbePanel 이 심문
+app/chat/     범용 AI 자유 채팅 (관리자=로컬 Claude, hosted=OpenAI)
+app/tour/     실제 제품 화면 위에 주석을 얹는 공모전 제출용 투어
 app/admin/    저작 도구 (page.admin.tsx = 프로파일로 제외되는 진입점)
+app/api/      hosted 전용 DB 읽기 + OpenAI 서버 경로
 lib/types.ts  데이터 모델 (전부 JSON 직렬화 가능)
 lib/engine.ts 판정·확률 굴림·심문 해금·검증 (순수 함수)
 lib/seal.ts   심문 진상 봉인
-lib/ai/       AI 호출 계층 — 사용자 기기에서 직접 나간다
+lib/ai/       RPG AI 계층 — 관리자 로컬 Claude / hosted OpenAI
+lib/chat/     통합 자유 채팅 UI의 공급자·모델·저장 계층
 lib/profile.ts 배포 프로파일
 data/         번들 샘플 작품
 ```
 
-저장은 localStorage. 기기 간 이동은 관리자 화면의 JSON 내보내기/가져오기로 한다.
+관리자 편집본은 localStorage와 JSON 내보내기를 사용하고, 공개 발행본과 투어는 PostgreSQL에서 읽는다.
 
 ## 문서
 

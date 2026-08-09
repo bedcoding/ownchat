@@ -1,8 +1,8 @@
 'use client';
 
-import { hostedOpenAIAvailable, subscriptionPossible } from '@/lib/capabilities';
-import type { Resolution } from '@/lib/providers';
-import type { BridgeHealth, Settings } from '@/lib/types';
+import { hostedOpenAIAvailable, subscriptionPossible } from '@/lib/chat/capabilities';
+import type { Resolution } from '@/lib/chat/providers';
+import type { BridgeHealth, Settings } from '@/lib/chat/types';
 import LoginButton from './LoginButton';
 
 interface Props {

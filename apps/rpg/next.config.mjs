@@ -63,6 +63,8 @@ const pageExtensions =
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Next dev가 저장소 안에 AGENTS.md/CLAUDE.md를 자동 생성해 작업 트리를 더럽히지 않게 한다.
+  agentRules: false,
   // Electron/admin keeps a static bundle. Only the public Vercel profile has server routes.
   ...(HOSTED ? {} : { output: 'export' }),
   poweredByHeader: false,
@@ -71,6 +73,7 @@ const nextConfig = {
     // 클라이언트 코드가 프로파일을 볼 수 있게 한다 (홈 화면의 링크, 수록 작품 필터)
     NEXT_PUBLIC_RPG_PROFILE: PROFILE,
     NEXT_PUBLIC_RPG_HOSTED: HOSTED ? '1' : '0',
+    NEXT_PUBLIC_OWNCHAT_HOSTED: HOSTED ? '1' : '0',
   },
   webpack: (config, { isServer, webpack }) => {
     if (!isServer) {

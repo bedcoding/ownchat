@@ -1,6 +1,6 @@
 'use client';
 
-import type { Conversation } from '@/lib/types';
+import type { Conversation } from '@/lib/chat/types';
 
 interface Props {
   conversations: Conversation[];
