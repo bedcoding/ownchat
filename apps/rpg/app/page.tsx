@@ -17,6 +17,11 @@ export default function Home() {
           <div className="d">발행된 트리를 플레이합니다</div>
         </Link>
 
+        <Link className="link-card" href="/tour">
+          <div className="t">제품 둘러보기</div>
+          <div className="d">실제 플레이 화면 위에서 주요 기능을 확인합니다</div>
+        </Link>
+
         {/*
           관리자 빌드에만 링크가 있고, 사용자 빌드에는 /admin 라우트 자체가 없다
           (next.config.mjs 의 pageExtensions 로 페이지에서 제외된다).

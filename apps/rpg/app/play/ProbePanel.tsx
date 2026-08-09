@@ -6,6 +6,7 @@ import { askProbe } from '@/lib/ai/probe';
 import { loadSettings, saveSettings } from '@/lib/ai/settings';
 import type { AiSettings, AiTurn, BridgeHealth } from '@/lib/ai/types';
 import { applyProbeReply, probeTurnsLeft } from '@/lib/engine';
+import type { TourProbeDemo, TourProbeEntry } from '@/lib/tour';
 import type { PlayState, StoryNode } from '@/lib/types';
 
 /**
@@ -22,21 +23,16 @@ interface Props {
   node: StoryNode;
   state: PlayState;
   onState: (next: PlayState) => void;
+  demo?: TourProbeDemo;
+  tourMode?: boolean;
 }
 
-interface Entry {
-  role: 'user' | 'assistant';
-  text: string;
-  /** 이 답변으로 해금된 것들 */
-  gains?: string[];
-}
-
-export default function ProbePanel({ node, state, onState }: Props) {
+export default function ProbePanel({ node, state, onState, demo, tourMode = false }: Props) {
   const probe = node.probe!;
   const [settings, setSettings] = useState<AiSettings>(() => loadSettings());
   const [health, setHealth] = useState<BridgeHealth | null>(null);
-  const [checking, setChecking] = useState(true);
-  const [log, setLog] = useState<Entry[]>([]);
+  const [checking, setChecking] = useState(!demo);
+  const [log, setLog] = useState<TourProbeEntry[]>(() => demo?.log ?? []);
   const [question, setQuestion] = useState('');
   const [pending, setPending] = useState('');
   const [busy, setBusy] = useState(false);
@@ -46,6 +42,10 @@ export default function ProbePanel({ node, state, onState }: Props) {
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    if (demo) {
+      setChecking(false);
+      return;
+    }
     let alive = true;
     void probeBridge(settings).then((h) => {
       if (!alive) return;
@@ -55,14 +55,14 @@ export default function ProbePanel({ node, state, onState }: Props) {
     return () => {
       alive = false;
     };
-  }, [settings]);
+  }, [settings, demo]);
 
   // 노드를 떠나면 대화를 버린다. 얻은 것(플래그·아이템)만 상태에 남는다.
   useEffect(() => {
-    setLog([]);
+    setLog(demo?.log ?? []);
     sessionRef.current = null;
     return () => abortRef.current?.abort();
-  }, [node.id]);
+  }, [node.id, demo]);
 
   const update = useCallback((patch: Partial<AiSettings>) => {
     setSettings((prev) => {
@@ -78,7 +78,19 @@ export default function ProbePanel({ node, state, onState }: Props) {
 
   const send = useCallback(async () => {
     const text = question.trim();
-    if (!text || busy || !resolution.route || exhausted) return;
+    if (!text || busy || exhausted || (!demo && !resolution.route)) return;
+
+    if (demo) {
+      setQuestion('');
+      setLog((prev) => [
+        ...prev,
+        { role: 'user', text },
+        { role: 'assistant', text: demo.reply },
+      ]);
+      return;
+    }
+
+    if (!resolution.route) return;
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -129,14 +141,16 @@ export default function ProbePanel({ node, state, onState }: Props) {
       ...prev,
       { role: 'assistant', text: reply.answer, gains: gains.map((g) => g.notice) },
     ]);
-  }, [busy, exhausted, log, node, onState, question, resolution.route, settings, state]);
+  }, [busy, demo, exhausted, log, node, onState, question, resolution.route, settings, state]);
 
   return (
     <div className="probe">
-      <div className="probe-head">
+      <div className="probe-head" data-tour={tourMode ? 'probe' : undefined}>
         <span className="who">{probe.who || '심문'}</span>
         {left !== null ? <span className="left">질문 {left}회 남음</span> : null}
       </div>
+
+      {demo ? <div className="probe-demo-note">둘러보기용 예시 대화 · API를 호출하지 않습니다</div> : null}
 
       {probe.intro ? <p className="probe-intro">{probe.intro}</p> : null}
 
@@ -165,7 +179,7 @@ export default function ProbePanel({ node, state, onState }: Props) {
 
       {checking ? (
         <p className="hint-line">연결을 확인하는 중…</p>
-      ) : resolution.route && !exhausted ? (
+      ) : (resolution.route || Boolean(demo)) && !exhausted ? (
         <div className="probe-input">
           <input
             value={question}

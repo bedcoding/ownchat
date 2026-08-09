@@ -28,6 +28,7 @@
     "rpg:build:hosted": "npm run build:hosted -w @ownchat/rpg",
     "rpg:start:hosted": "npm run start:hosted -w @ownchat/rpg",
     "rpg:db:migrate": "npm run db:migrate -w @ownchat/rpg",
+    "rpg:db:tour:sync": "npm run db:tour:sync -w @ownchat/rpg",
     "rpg:typecheck": "npm run typecheck -w @ownchat/rpg",
     "bridge": "npm run start -w @ownchat/bridge",
     "bridge:token": "npm run start -w @ownchat/bridge -- --print-token"

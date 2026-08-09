@@ -13,6 +13,7 @@ import {
   outcomeHint,
   resolveEnding,
 } from '@/lib/engine';
+import type { TourProbeDemo } from '@/lib/tour';
 import type { Character, Outcome, PlayState, StoryNode, Work } from '@/lib/types';
 import ProbePanel from './ProbePanel';
 
@@ -23,7 +24,12 @@ interface Props {
   /** 관리자 미리보기에서는 저장하지 않는다 */
   persist?: (state: PlayState | null) => void;
   initial?: PlayState | null;
+  initialTab?: Tab;
   onExit?: () => void;
+  /** 실제 화면 위에 설명을 얹는 /tour 에서만 data-tour 표식을 노출한다 */
+  tourMode?: boolean;
+  /** 투어의 심문 예시는 네트워크를 호출하지 않는다 */
+  demoProbe?: TourProbeDemo;
 }
 
 /**
@@ -34,7 +40,15 @@ interface Props {
  * 부르고, 그때도 요청은 사용자 기기에서 직접 나간다(이 사이트의 서버는 끼지 않는다).
  * 작품이 어느 쪽인지는 `requiresRuntimeAI()` 가 데이터에서 판정한다.
  */
-export default function Runner({ work: rawWork, persist, initial, onExit }: Props) {
+export default function Runner({
+  work: rawWork,
+  persist,
+  initial,
+  initialTab = 'scene',
+  onExit,
+  tourMode = false,
+  demoProbe,
+}: Props) {
   /*
    * 화면에 그릴 때만 플랫폼 이름을 치환한다. 저작 도구가 들고 있는 원본은
    * 토큰(`{PLATFORM}`)을 유지해야 발행 JSON 에 실명이 새지 않는다.
@@ -48,7 +62,7 @@ export default function Runner({ work: rawWork, persist, initial, onExit }: Prop
     const entry = ep ? findNode(ep, ep.entry) : undefined;
     return entry ? arriveAt(s, entry) : s;
   });
-  const [tab, setTab] = useState<Tab>('scene');
+  const [tab, setTab] = useState<Tab>(initialTab);
 
   useEffect(() => {
     persist?.(state);
@@ -106,8 +120,8 @@ export default function Runner({ work: rawWork, persist, initial, onExit }: Prop
   }
 
   return (
-    <div className="frame">
-      <div className="topbar">
+    <div className="frame" data-tour={tourMode ? 'runner' : undefined}>
+      <div className="topbar" data-tour={tourMode ? 'player-nav' : undefined}>
         {onExit ? (
           <button className="icon-btn" onClick={onExit}>
             ←
@@ -127,8 +141,8 @@ export default function Runner({ work: rawWork, persist, initial, onExit }: Prop
         </button>
       </div>
 
-      {tab === 'dex' ? <Dex work={work} revealed={state.revealed} /> : null}
-      {tab === 'record' ? <Record state={state} /> : null}
+      {tab === 'dex' ? <Dex work={work} revealed={state.revealed} tourMode={tourMode} /> : null}
+      {tab === 'record' ? <Record state={state} tourMode={tourMode} /> : null}
 
       {tab === 'scene' ? (
         node.ending ? (
@@ -141,7 +155,7 @@ export default function Runner({ work: rawWork, persist, initial, onExit }: Prop
           />
         ) : (
           <>
-            <div className="scene">
+            <div className="scene" data-tour={tourMode ? 'scene' : undefined}>
               <SceneArt node={node} />
               {atEpisodeStart && episode.recap ? <div className="recap">{episode.recap}</div> : null}
               {rolled ? <div className="rolled">{rolled}</div> : null}
@@ -151,7 +165,15 @@ export default function Runner({ work: rawWork, persist, initial, onExit }: Prop
               </div>
             </div>
 
-            {node.probe ? <ProbePanel node={node} state={state} onState={setState} /> : null}
+            {node.probe ? (
+              <ProbePanel
+                node={node}
+                state={state}
+                onState={setState}
+                demo={tourMode ? demoProbe : undefined}
+                tourMode={tourMode}
+              />
+            ) : null}
 
             <div className="choices">
               {node.choices.map((choice, i) => {
@@ -161,6 +183,7 @@ export default function Runner({ work: rawWork, persist, initial, onExit }: Prop
                   <button
                     key={`${choice.next}-${i}`}
                     className="choice"
+                    data-tour={tourMode && i === 0 ? 'choices' : undefined}
                     disabled={locked !== null}
                     onClick={() => pick(i)}
                   >
@@ -176,7 +199,7 @@ export default function Runner({ work: rawWork, persist, initial, onExit }: Prop
         )
       ) : null}
 
-      <Hud state={state} />
+      <Hud state={state} tourMode={tourMode} />
     </div>
   );
 }
@@ -195,10 +218,10 @@ function SceneArt({ node }: { node: StoryNode }) {
   );
 }
 
-function Hud({ state }: { state: PlayState }) {
+function Hud({ state, tourMode = false }: { state: PlayState; tourMode?: boolean }) {
   const stats = Object.entries(state.stats);
   return (
-    <div className="hud">
+    <div className="hud" data-tour={tourMode ? 'hud' : undefined}>
       {stats.map(([name, value]) => (
         <span className="stat" key={name}>
           {name}
@@ -253,10 +276,18 @@ function EndingView({
   );
 }
 
-function Dex({ work, revealed }: { work: Work; revealed: string[] }) {
+function Dex({
+  work,
+  revealed,
+  tourMode = false,
+}: {
+  work: Work;
+  revealed: string[];
+  tourMode?: boolean;
+}) {
   const seen = (c: Character) => revealed.includes(c.id);
   return (
-    <div className="panel">
+    <div className="panel" data-tour={tourMode ? 'dex' : undefined}>
       <div className="dex">
         {work.characters.map((c) => (
           <div className={`dex-card${seen(c) ? '' : ' locked'}`} key={c.id}>
@@ -273,13 +304,13 @@ function Dex({ work, revealed }: { work: Work; revealed: string[] }) {
   );
 }
 
-function Record({ state }: { state: PlayState }) {
+function Record({ state, tourMode = false }: { state: PlayState; tourMode?: boolean }) {
   if (state.log.length === 0) {
-    return <div className="panel"><div className="empty-note">아직 기록이 없습니다.</div></div>;
+    return <div className="panel" data-tour={tourMode ? 'record' : undefined}><div className="empty-note">아직 기록이 없습니다.</div></div>;
   }
   let lastEpisode = -1;
   return (
-    <div className="panel">
+    <div className="panel" data-tour={tourMode ? 'record' : undefined}>
       <div className="record">
         {state.log.map((entry, i) => {
           const mark = entry.episodeIndex !== lastEpisode;
