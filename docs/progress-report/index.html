@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ownchat 구현 현황 브리핑</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #09090b;
+        --surface: #121216;
+        --surface-2: #19191f;
+        --line: #2b2b34;
+        --text: #f5f3f7;
+        --muted: #a6a3ad;
+        --pink: #ff3e78;
+        --pink-soft: rgba(255, 62, 120, 0.13);
+        --green: #52d99a;
+        --green-soft: rgba(82, 217, 154, 0.12);
+        --amber: #f2bd62;
+        --amber-soft: rgba(242, 189, 98, 0.12);
+        --blue: #7ca8ff;
+        --blue-soft: rgba(124, 168, 255, 0.12);
+        --max: 1180px;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 10% -5%, rgba(255, 62, 120, 0.19), transparent 29rem),
+          radial-gradient(circle at 92% 22%, rgba(124, 168, 255, 0.12), transparent 30rem),
+          var(--bg);
+        color: var(--text);
+        font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, sans-serif;
+        line-height: 1.6;
+      }
+
+      a { color: inherit; }
+      .shell { width: min(calc(100% - 36px), var(--max)); margin: 0 auto; }
+
+      .hero { padding: 84px 0 52px; }
+      .eyebrow {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        color: #ffc2d4;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+      }
+      .eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--pink); }
+      h1 {
+        max-width: 900px;
+        margin: 18px 0 16px;
+        font-size: clamp(42px, 7vw, 82px);
+        line-height: 1.02;
+        letter-spacing: -.055em;
+      }
+      .hero-copy { max-width: 780px; margin: 0; color: #c8c5ce; font-size: 19px; }
+      .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 5px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(18, 18, 22, .72);
+        color: #d9d6dd;
+        font-size: 13px;
+      }
+      .dot { width: 7px; height: 7px; border-radius: 99px; background: currentColor; box-shadow: 0 0 14px currentColor; }
+      .ok { color: var(--green); }
+      .pending { color: var(--amber); }
+      .info { color: var(--blue); }
+
+      .section { padding: 54px 0; border-top: 1px solid rgba(255,255,255,.07); }
+      .section-head { display: grid; grid-template-columns: 180px 1fr; gap: 30px; margin-bottom: 30px; }
+      .section-kicker { color: var(--pink); font-size: 13px; font-weight: 800; letter-spacing: .1em; }
+      h2 { margin: 0; font-size: clamp(28px, 4vw, 46px); line-height: 1.14; letter-spacing: -.035em; }
+      h3 { margin: 0 0 8px; font-size: 20px; letter-spacing: -.02em; }
+      p { margin: 0; }
+      .muted { color: var(--muted); }
+
+      .status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      .status-card, .card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(145deg, rgba(27,27,33,.94), rgba(16,16,20,.94));
+        box-shadow: 0 18px 60px rgba(0,0,0,.18);
+      }
+      .status-card { padding: 20px; }
+      .status-card .value { margin: 8px 0 4px; font-size: 25px; font-weight: 850; letter-spacing: -.03em; }
+      .status-card .label { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+      .status-card p { color: #b9b6bf; font-size: 13px; }
+
+      .flow {
+        display: grid;
+        grid-template-columns: 1fr 46px 1fr 46px 1fr;
+        align-items: stretch;
+      }
+      .flow-node {
+        min-height: 188px;
+        padding: 23px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+      .flow-node.admin { border-color: rgba(124,168,255,.42); background: var(--blue-soft); }
+      .flow-node.server { border-color: rgba(255,62,120,.43); background: var(--pink-soft); }
+      .flow-node.data { border-color: rgba(82,217,154,.4); background: var(--green-soft); }
+      .flow-arrow { display: grid; place-items: center; color: #77737f; font-size: 24px; }
+      .mini-list { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; color: #c5c2ca; font-size: 14px; }
+      .mini-list li::before { content: "·"; margin-right: 8px; color: var(--pink); font-weight: 900; }
+
+      .shot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      figure { margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
+      figure.wide { grid-column: 1 / -1; }
+      figure img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; object-position: top center; background: #0b0b0d; }
+      figcaption { padding: 18px 20px 21px; }
+      figcaption strong { display: block; margin-bottom: 4px; font-size: 16px; }
+      figcaption span { color: var(--muted); font-size: 13px; }
+
+      .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+      .mode { position: relative; padding: 24px; overflow: hidden; }
+      .mode::after { content: attr(data-index); position: absolute; top: -20px; right: 12px; color: rgba(255,255,255,.04); font-size: 100px; font-weight: 900; }
+      .mode .tag { display: inline-block; margin-bottom: 28px; padding: 4px 9px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+      .mode ul { margin: 14px 0 0; padding-left: 18px; color: #c2bfc7; font-size: 14px; }
+      .mode li + li { margin-top: 5px; }
+
+      .split { display: grid; grid-template-columns: 1.08fr .92fr; gap: 18px; }
+      .card { padding: 25px; }
+      .schema {
+        margin: 18px 0 0;
+        padding: 18px;
+        border: 1px solid #32323a;
+        border-radius: 14px;
+        background: #0d0d10;
+        color: #d8d5dd;
+        font: 14px/1.9 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre;
+      }
+      .fallback { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 18px; }
+      .fallback span { padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; background: #101014; font-size: 13px; }
+      .fallback b { color: #6f6c75; }
+
+      .timeline { counter-reset: step; display: grid; gap: 12px; }
+      .timeline-item { display: grid; grid-template-columns: 44px 1fr; gap: 15px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+      .timeline-item::before {
+        counter-increment: step;
+        content: counter(step);
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        background: var(--pink-soft);
+        color: #ff93b3;
+        font-weight: 850;
+      }
+      .timeline-item strong { display: block; margin-bottom: 3px; }
+      .timeline-item span { color: var(--muted); font-size: 14px; }
+
+      .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .checklist { margin: 18px 0 0; padding: 0; list-style: none; }
+      .checklist li { position: relative; padding: 10px 0 10px 30px; border-bottom: 1px solid rgba(255,255,255,.06); color: #cfccd4; }
+      .checklist li::before { position: absolute; left: 2px; top: 10px; font-weight: 900; }
+      .done li::before { content: "✓"; color: var(--green); }
+      .todo li::before { content: "→"; color: var(--amber); }
+
+      .callout { padding: 24px; border: 1px solid rgba(242,189,98,.32); border-radius: 18px; background: var(--amber-soft); }
+      .callout strong { color: #ffd895; }
+      code { padding: 2px 6px; border-radius: 5px; background: rgba(255,255,255,.07); color: #ffbed1; font: .9em ui-monospace, monospace; }
+
+      footer { padding: 44px 0 68px; color: #77737f; font-size: 13px; }
+
+      @media (max-width: 860px) {
+        .section-head { grid-template-columns: 1fr; gap: 8px; }
+        .status-grid, .mode-grid { grid-template-columns: 1fr 1fr; }
+        .flow { grid-template-columns: 1fr; gap: 10px; }
+        .flow-arrow { transform: rotate(90deg); }
+        .split, .check-grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 560px) {
+        .hero { padding-top: 56px; }
+        .status-grid, .mode-grid, .shot-grid { grid-template-columns: 1fr; }
+        figure.wide { grid-column: auto; }
+        h1 { font-size: 44px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero shell">
+      <div class="eyebrow">Implementation briefing · 2026.08.10</div>
+      <h1>ownchat은 지금<br />어디까지 왔나</h1>
+      <p class="hero-copy">
+        Claude가 만들다 멈춘 로컬 프로토타입을 점검하고, 관리자용 로컬 Claude와 사용자용 Vercel 웹을
+        하나의 Next.js 앱과 서로 다른 빌드 프로필로 통합했다. 이 문서는 현재 화면과 실제 검증 결과를 기준으로 작성했다.
+      </p>
+      <div class="hero-meta">
+        <span class="pill ok"><span class="dot"></span>앱 통합 푸시 완료 · 603f627</span>
+        <span class="pill ok"><span class="dot"></span>PostgreSQL 마이그레이션 완료</span>
+        <span class="pill pending"><span class="dot"></span>Vercel 배포 전</span>
+        <span class="pill ok"><span class="dot"></span>OpenAI 채팅 경로 구현</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <div class="shell">
+          <div class="section-head">
+            <div class="section-kicker">CURRENT STATUS</div>
+            <h2>앱 통합과 AI·DB 연결은 끝났고,<br />실제 배포 확인이 남았다.</h2>
+          </div>
+          <div class="status-grid">
+            <article class="status-card">
+              <div class="label">BUILD PROFILES</div>
+              <div class="value ok">3개 통과</div>
+              <p>사용자 정적 · 관리자 정적 · Vercel 호스팅</p>
+            </article>
+            <article class="status-card">
+              <div class="label">DATABASE</div>
+              <div class="value ok">연결 성공</div>
+              <p>가비아 study DB · ownchat 스키마</p>
+            </article>
+            <article class="status-card">
+              <div class="label">FALLBACK</div>
+              <div class="value ok">3단계</div>
+              <p>DB → 브라우저 캐시 → 번들 작품</p>
+            </article>
+            <article class="status-card">
+              <div class="label">HOSTING</div>
+              <div class="value pending">설정 대기</div>
+              <p>Vercel 서버 비밀값 등록 필요</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="shell">
+          <div class="section-head">
+            <div class="section-kicker">TARGET ARCHITECTURE</div>
+            <h2>한 코드베이스,<br />서로 다른 두 실행 환경</h2>
+          </div>
+          <div class="flow">
+            <article class="flow-node admin">
+              <h3>관리자 설치형</h3>
+              <p class="muted">Electron · 로컬 환경</p>
+              <ul class="mini-list">
+                <li>로컬 Claude Code 사용</li>
+                <li>작품 저작·검수·미리보기</li>
+                <li>관리자 화면은 웹 배포에서 제외</li>
+              </ul>
+            </article>
+            <div class="flow-arrow">→</div>
+            <article class="flow-node server">
+              <h3>Vercel 사용자 웹</h3>
+              <p class="muted">Next.js 서버 · 공개 플레이어</p>
+              <ul class="mini-list">
+                <li>버튼형 스토리는 AI 비용 0</li>
+                <li>자유 채팅형만 OpenAI 사용</li>
+                <li>서버가 API 키와 DB 비밀 보관</li>
+              </ul>
+            </article>
+            <div class="flow-arrow">→</div>
+            <article class="flow-node data">
+              <h3>PostgreSQL</h3>
+              <p class="muted">가비아 study · ownchat 스키마</p>
+              <ul class="mini-list">
+                <li>작품 JSONB 중앙 저장</li>
+                <li>수정 이력용 revisions</li>
+                <li>기기간 작업 연속성 확보</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="shell">
+          <div class="section-head">
+            <div class="section-kicker">ACTUAL UI</div>
+            <h2>말이 아니라,<br />현재 동작하는 화면</h2>
+          </div>
+          <div class="shot-grid">
+            <figure class="wide">
+              <img src="assets/admin-editor.png" alt="관리자 작품 편집 화면" />
+              <figcaption>
+                <strong>관리자 저작 도구</strong>
+                <span>작품 제목·등급·능력치·인물·회차를 편집하고 JSON 내보내기, 미리보기, 발행을 수행한다.</span>
+              </figcaption>
+            </figure>
+            <figure>
+              <img src="assets/player-library.png" alt="사용자 작품 선택 화면" />
+              <figcaption>
+                <strong>사용자 작품 목록</strong>
+                <span>오프라인 버튼형 작품과 AI 심문이 있는 작품을 배지로 구분한다.</span>
+              </figcaption>
+            </figure>
+            <figure>
+              <img src="assets/player-game.png" alt="버튼형 스토리 플레이 화면" />
+              <figcaption>
+                <strong>고정 버튼형 스토리</strong>
+                <span>서울2033식 선택지, 능력치·아이템·조건 분기. 플레이 중 AI 비용은 없다.</span>
+              </figcaption>
+            </figure>
+            <figure class="wide">
+              <img src="assets/player-probe.png" alt="용의자 자유 심문 진입 화면" />
+              <figcaption>
+                <strong>자유 심문 노드</strong>
+                <span>호스팅 프로필에서는 서버의 OpenAI 스트리밍 경로를 사용하고, 관리자 프로필에서는 로컬 Claude를 사용한다.</span>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="shell">
+          <div class="section-head">
+            <div class="section-kicker">PLAY MODES</div>
+            <h2>스토리 장르가 아니라<br />진행 방식으로 모드를 나눈다.</h2>
+          </div>
+          <div class="mode-grid">
+            <article class="card mode" data-index="1">
+              <span class="tag info" style="background:var(--blue-soft)">ADMIN</span>
+              <h3>관리자 미리보기</h3>
+              <p class="muted">설치형 Electron에서 로컬 Claude 활용</p>
+              <ul>
+                <li>초안 생성과 다음 화 보조</li>
+                <li>작품 검수와 실제 플레이</li>
+                <li>외부 API 비용 없음</li>
+              </ul>
+            </article>
+            <article class="card mode" data-index="2">
+              <span class="tag ok" style="background:var(--green-soft)">BUTTON</span>
+              <h3>고정 버튼형</h3>
+              <p class="muted">사전 생성된 노드와 선택지로 진행</p>
+              <ul>
+                <li>웹·오프라인 모두 가능</li>
+                <li>사용자 AI 비용 0</li>
+                <li>결과 재현과 검수 용이</li>
+              </ul>
+            </article>
+            <article class="card mode" data-index="3">
+              <span class="tag pending" style="background:var(--amber-soft)">FREE CHAT</span>
+              <h3>자유 채팅형</h3>
+              <p class="muted">용의자와 직접 대화하며 추리</p>
+              <ul>
+                <li>웹에서는 OpenAI API 사용</li>
+                <li>해당 노드에서만 토큰 소비</li>
+                <li>상태 변경은 규칙 엔진이 통제</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="shell">
+          <div class="section-head">
+            <div class="section-kicker">DATABASE</div>
+            <h2>공유 DB 안에서<br />프로젝트 경계를 지켰다.</h2>
+          </div>
+          <div class="split">
+            <article class="card">
+              <h3>study DB 구조</h3>
+              <p class="muted">feedback-radar, toonmadang과 테이블이 섞이지 않는다.</p>
+              <div class="schema">study
+├─ feedback_radar
+├─ toonmadang
+├─ public
+└─ ownchat
+   ├─ schema_migrations
+   ├─ works
+   ├─ work_revisions
+   └─ tour_documents</div>
+            </article>
+            <article class="card">
+              <h3>장애 시 읽기 순서</h3>
+              <p class="muted">공모전 시연에서 DB가 잠깐 끊겨도 화면이 비지 않도록 구성했다.</p>
+              <div class="fallback">
+                <span>PostgreSQL</span><b>→</b><span>마지막 정상 캐시</span><b>→</b><span>번들 3작품</span>
+              </div>
+              <ul class="mini-list" style="margin-top:24px">
+                <li>마이그레이션 0001 적용 및 재실행 검증</li>
+                <li>현재 DB 발행 작품 0개</li>
+                <li>현재 API는 번들 작품 3개를 정상 반환</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="shell">
+          <div class="section-head">
+            <div class="section-kicker">VERCEL</div>
+            <h2>배포 설정은<br />저장소와 서버 비밀값만 연결한다.</h2>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div><strong>GitHub 저장소 Import</strong><span><code>bedcoding/ownchat</code>을 Vercel 프로젝트로 가져온다.</span></div>
+            </div>
+            <div class="timeline-item">
+              <div><strong>Root Directory 지정</strong><span><code>apps/rpg</code>를 선택한다. vercel.json이 호스팅 빌드를 자동 선택한다.</span></div>
+            </div>
+            <div class="timeline-item">
+              <div><strong>서버 환경변수 등록</strong><span><code>DATABASE_URL</code>, <code>DATABASE_SSL=disable</code>, <code>OPENAI_API_KEY</code>를 등록한다.</span></div>
+            </div>
+            <div class="timeline-item">
+              <div><strong>Deploy 후 확인</strong><span><code>/play</code>, <code>/chat</code>, <code>/tour</code>, <code>/api/health</code>를 확인한다.</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="shell">
+          <div class="section-head">
+            <div class="section-kicker">DONE / NEXT</div>
+            <h2>완료 범위와<br />공모전 전 남은 일</h2>
+          </div>
+          <div class="check-grid">
+            <article class="card">
+              <h3 class="ok">완료됨</h3>
+              <ul class="checklist done">
+                <li>기존 RPG 로직과 AI 사용 지점 분석</li>
+                <li>관리자·사용자·호스팅 빌드 분리</li>
+                <li>PostgreSQL 연결 풀과 서버 전용 환경변수</li>
+                <li>ownchat 스키마 및 작품·리비전 테이블</li>
+                <li>DB 헬스체크와 작품 읽기 API</li>
+                <li>브라우저 캐시·번들 작품 폴백</li>
+                <li>RPG 자유 심문·범용 채팅 OpenAI 서버 경로</li>
+                <li>관리자·플레이어·투어를 apps/rpg로 통합</li>
+                <li>main 커밋·GitHub 푸시</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3 class="pending">다음 작업</h3>
+              <ul class="checklist todo">
+                <li>Vercel 최초 배포와 실제 원격 DB 접속 확인</li>
+                <li>관리자 발행 → DB 동기화 쓰기 API</li>
+                <li>Electron이 RPG 관리자 빌드를 포장하도록 연결</li>
+                <li>공모전 시연 작품과 PDF 캡처 확정</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="shell">
+          <div class="callout">
+            <strong>현실적인 결론</strong>
+            <p style="margin-top:8px">
+              지금은 “관리 도구·플레이 엔진·투어·OpenAI 채팅·DB 읽기 경로가 한 앱에 통합된 상태”다.
+              실제 Vercel 배포 검증과 관리자 DB 발행 경로는 아직 남아 있다.
+              가비아 PostgreSQL은 TLS를 지원하지 않아 이번 공모전 데모 범위로만 사용하는 것이 안전하다.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="shell">
+      Generated from the local application, migration verification, and Git state · Screens captured with Playwright
+    </footer>
+  </body>
+</html>

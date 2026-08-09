@@ -11,6 +11,7 @@ apps/desktop/dist/
 
 dist/
 *.tsbuildinfo
+.tmp/
 
 # 실제 작품 자산은 커밋하지 않는다 — 저작권·사내 기획 노출.
 # 관리자 화면의 JSON 내보내기/가져오기로 로컬에서만 다룬다.

@@ -111,6 +111,7 @@ Vercel 프로젝트 Root Directory는 `apps/rpg`다. `OPENAI_API_KEY`는 서버�
 
 | 문서 | 내용 |
 |---|---|
+| [docs/progress-report/index.html](docs/progress-report/index.html) | 화면 캡처가 포함된 구현 현황 HTML 브리핑 |
 | [docs/HANDOFF.md](docs/HANDOFF.md) | **직전 작업 인수인계** — 이어받는 사람이 가장 먼저 읽을 것 |
 | [docs/STATUS.md](docs/STATUS.md) | **작업 현황** — 검증된 것, 남은 일, 함정 목록 |
 | [docs/POLICY.md](docs/POLICY.md) | 정책 근거와 구조 결정 (왜 이렇게 만들었나) |
